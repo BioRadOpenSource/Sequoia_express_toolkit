@@ -3,7 +3,7 @@ def paramsWithUsage = readParamsFromJsonSettings()
 
 // Constants
 acceptableGenomes = ["rnor6", "hg38", "mm10"]
-allowedSpikes     = ["ercc", "miltenyi"]
+allowedSpikes     = ["ercc"]
 
 // Show help emssage
 if (params.help){
@@ -29,8 +29,6 @@ geneId               = params.genomes[params.genome][params.spikeType].geneId
 sjdbGTFFile          = file(params.genomes[params.genome][params.spikeType].sjdbGTFFile)
 refFlatFile          = file(params.genomes[params.genome][params.spikeType].refFlatFile)
 ribosomalIntervalFile = file(params.genomes[params.genome][params.spikeType].ribosomalIntervalFile)
-miRNABedFile         = file(params.genomes[params.genome][params.spikeType].miRNABedFile)
-miRNAgtfFile         = file(params.genomes[params.genome][params.spikeType].miRNAgtfFile)
 longRNAgtfFile       = file(params.genomes[params.genome][params.spikeType].longRNAgtfFile)
 sizesFile            = file(params.genomes[params.genome][params.spikeType].sizesFile)
 
@@ -58,8 +56,6 @@ summary['geneId'] = geneId
 summary['sjdb GTF File'] = sjdbGTFFile
 summary['ref Flat File'] = refFlatFile
 summary['Ribosoma Interval File'] = ribosomalIntervalFile
-summary['miRNA Bed File'] = miRNABedFile
-summary['miRNA GTF File'] = miRNAgtfFile
 summary['Long RNA GTF File'] = longRNAgtfFile
 summary['Sizes File'] = sizesFile
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -76,12 +72,40 @@ log.info bioradHeader()
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "----------------------------------------------------"
 
+// TODO: Does there need to be an option for R2 with no umi
 // Create Channels
+if(params.skipUmi){
+	read_dir = params.reads+"*R{1}*"
+}
+else{
+	read_dir = params.reads+"*R{1,2}*"
+}
+
+
 Channel
     //Todo, make this more robust
-    .fromFilePairs( params.reads, size: params.skipUmi ? 1 : 2) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
+    .fromFilePairs( read_dir, flat:true) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
     .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nNB: Path requires at least one * wildcard!\nIf not using R2, pass --skipUmi on CLI" }
-    .into { raw_reads_fastqc; raw_reads; raw_reads_validation }
+    .map { prefix, file1, file2 -> tuple(getLibraryId(prefix), file1, file2) }
+    .groupTuple()
+    .set { raw_reads_fastqc; raw_reads; raw_reads_validation }
+
+
+def getLibraryId( fileName ) {
+  fileName.tokenize('_').join("-")
+}
+/*
+process foo {
+  echo true
+  input:
+  set key, file(sample1), file(sample2) from grfile_ch
+
+  script:
+  """
+  echo your_command --batch $key --input $sample1 $sample2
+  """
+} 
+*/
 
 
 // Begin Processing
@@ -204,10 +228,10 @@ process starAlign {
         --outFilterMatchNminOverLread 0 \
         --outReadsUnmapped Fastx \
         --outSAMtype BAM SortedByCoordinate \
-        # --outSAMmultNmax 1 \
+        --outSAMmultNmax 1 \
         # ^ do not print mms, just report in NH tag
-        # --outMultimapperOrder Random \
-        # --runRNGseed 1234 \
+        --outMultimapperOrder Random \
+        --runRNGseed 1234 \
         --outFileNamePrefix ./ > star_log.txt 2>&1
     rm -rf _STARgenome
     sambamba index -t $task.cpus Aligned.sortedByCoord.out.bam
@@ -275,7 +299,7 @@ if (!params.skipUmi) {
         set val(name), file(bams) from dedup_in_ch
 
         output:
-        set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") into splitBamMi_ch, splitBamLong_ch
+        set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") into BamLong_ch
         file 'dedup.log' into report_dedup
 
         script:
@@ -292,10 +316,10 @@ if (!params.skipUmi) {
         """
     }
 } else {
-    umiTagging_ch.into { splitBamMi_ch; splitBamLong_ch }
+    umiTagging_ch.into { BamLong_ch }
     report_dedup = Channel.empty()
 }
-
+/* Deprecated: from 2D - remove prior to launch
 process splitBamMi {
     label 'low_memory'
     tag "splitBamMi on $name"
@@ -356,7 +380,7 @@ process countMicroRNA {
     -R BAM ./out.miRNAs.bam
     """
 }
-
+*/
 process countLongRNA {
     label 'mid_cpu'
     label 'low_memory'
@@ -367,7 +391,7 @@ process countLongRNA {
     set val(name), file(bam) from longrna_bam_ch
     file longRNAgtfFile
     output:
-    set val(name), file('gene_counts_longRNA') into long_counts_ch
+    set val(name), file('gene_counts_longRNA') into long_counts_ch, counts_xls
     file "gene_counts_longRNA*" into report_longRNACounts
 
     script:
@@ -387,49 +411,16 @@ process calcRPMKTPM {
     publishDir "${params.outDir}/calcRPMKTPM", mode: 'copy'
     input:
     set val(l_name), file(long_counts) from long_counts_ch
-    set val(m_name), file(mi_counts) from mi_counts_ch
 
     output:
-    file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch
+    file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls
 
     script:
     """
-    cat $long_counts <(tail -n +3 $mi_counts) > ./tmp_counts.txt
-    python3 /opt/biorad/src/calc_rpkm_tpm.py ./tmp_counts.txt ./gene_counts_rpkmtpm.txt
+    python3 /opt/biorad/src/calc_rpkm_tpm.py $long_counts ./gene_counts_rpkmtpm.txt
     """
 
 }
-
-/*process genBigWig {*/
-    /*label 'mid_memory'*/
-    /*label 'low_cpu'*/
-    /*tag "genBigWig from $l_name"*/
-    /*publishDir "${params.outDir}/bigwig", mode: 'copy'*/
-    /*input:*/
-    /*set val(l_name), file(long_bam) from bigwig_long_rna_bam_ch*/
-    /*set val(m_name), file(mi_bam) from bigwig_mirna_bam_ch*/
-    /*file sizesFile */
-
-    /*script:*/
-    /*//TODO: split this into two processes so long and mi can run in parallel*/
-    /*//      or read from one channel and pass in the output name or something*/
-    /*//      use a .filter { it[1].size() > 0 } to prevent 0 size stuff running*/
-    /*"""*/
-    /*if [ \$(samtools view $long_bam | head -n1 | wc -l) -eq 1 ]; then*/
-        /*bedtools genomecov -bg -ibam $long_bam | sort -k1,1 -k2,2n > ./longRNAs.bedGraph*/
-        /*bedGraphToBigWig ./longRNAs.bedGraph $sizesFile ./longRNAs.bigWig*/
-    /*else */
-        /*echo $long_bam " is empty"*/
-    /*fi*/
-
-    /*if [ \$(samtools view $mi_bam | head -n1 | wc -l) -eq 1 ]; then */
-        /*bedtools genomecov -bg -ibam $mi_bam | sort -k1,1 -k2,2n > ./miRNAs.bedGraph*/
-        /*bedGraphToBigWig ./miRNAs.bedGraph $sizesFile ./miRNAs.bigWig*/
-    /*else*/
-        /*echo $mi_bam " is empty"*/
-    /*fi*/
-    /*"""*/
-/*}*/
 
 process assembleReport {
     label 'low_memory'
@@ -444,7 +435,6 @@ process assembleReport {
     file('out/star/*') from report_star.collect() 
     file('out/star/*') from report_picard.collect() // Goes into star for reasons
     file('out/umitools/*') from report_dedup.collect().ifEmpty([]) // optional
-    file('out/counts/*') from report_miRNACounts.collect()
     file('out/counts/*') from report_longRNACounts.collect()
 
     output:
@@ -460,6 +450,20 @@ process assembleReport {
     cp ./tmp/htmlReport.html ./
     cp ./tmp/pdfReport.pdf ./
     """
+}
+
+process nomalizedXLS{
+	label 'low_memory'
+	tag "coutsAsXls"
+	pubslishDir "${params.outDir}/calcRPMKTPM"
+
+	input:
+
+	output:
+	
+	script:
+	
+
 }
 
 /* Helper Functions */
@@ -527,12 +531,14 @@ def bioradHeader() {
     c_white = params.monochrome_logs ? '' : "\033[0;37m";
     return """
     ${c_reset}
-    ${c_green}__________.__                __________             .___
-    ${c_green}\\______   \\__| ____          \\______   \\_____     __| _/
-    ${c_green}|    |  _/  |/  _ \\   ______ |       _/\\__  \\   / __ | 
-    ${c_green}|    |   \\  (  <_> ) /_____/ |    |   \\ / __ \\_/ /_/ | 
-    ${c_green}|______  /__|\\____/          |____|_  /(____  /\\____ | 
-    ${c_green}       \\/                           \\/      \\/      \\/ 
+    ${c_green} / -----------------------------------------------------------\
+    ${c_green}/ __________.__                __________             .___     \
+    ${c_green}| \\______   \\__|____           \\______   \\____      __| _/ |
+    ${c_green}|   |  |  _/  |/  _ \\   ______   |     _/\\__  \\   / __ |    |
+    ${c_green}|   |  |   \\  (  <_> ) /_____/   |  |   \\ / __ \\_/ /_/ |    |
+    ${c_green}|   |____  /__|\\____/            |__|_  /(____  /\\____ |     |
+    ${c_green}|        \\/                           \\/      \\/      \\/   |
+    ${c_green}\_____________________________________________________________/
     ${c_reset}
     """.stripIndent()
 }
