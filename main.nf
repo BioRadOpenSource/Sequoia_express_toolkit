@@ -72,40 +72,16 @@ log.info bioradHeader()
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "----------------------------------------------------"
 
-// TODO: Does there need to be an option for R2 with no umi
-// Create Channels
-if(params.skipUmi){
-	read_dir = params.reads+"*R{1}*"
-}
-else{
-	read_dir = params.reads+"*R{1,2}*"
-}
 
+
+reads = params.reads+"*R{1,2}*"
 
 Channel
     //Todo, make this more robust
-    .fromFilePairs( read_dir, flat:true) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
-    .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nNB: Path requires at least one * wildcard!\nIf not using R2, pass --skipUmi on CLI" }
-    .map { prefix, file1, file2 -> tuple(getLibraryId(prefix), file1, file2) }
+    .fromFilePairs( reads, size:-1) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
+    .ifEmpty { exit 1, "Cannot find any reads matching: $reads\nNB: Path needs to be enclosed in quotes!\nNB: Path requires at least one * wildcard!\nIf not using R2 please use --seqType SE" }
     .groupTuple()
     .set { raw_reads_fastqc; raw_reads; raw_reads_validation }
-
-
-def getLibraryId( fileName ) {
-  fileName.tokenize('_').join("-")
-}
-/*
-process foo {
-  echo true
-  input:
-  set key, file(sample1), file(sample2) from grfile_ch
-
-  script:
-  """
-  echo your_command --batch $key --input $sample1 $sample2
-  """
-} 
-*/
 
 
 // Begin Processing
@@ -113,10 +89,10 @@ process foo {
 if (params.validateInputs) {
     process validateInputs {
         tag "Validation on $sample_id"
-        publishDir "${params.outDir}/validation", mode: 'copy'
+        publishDir "${params.outDir}/$sample_id/validation", mode: 'copy'
 
         input:
-        set val(sample_id), file(reads) from raw_reads_validation
+        set sample_id, file(reads) from raw_reads_validation
 
         script:
         """
@@ -126,11 +102,11 @@ if (params.validateInputs) {
 }
 process fastQc {
     tag "FASTQC on $sample_id"
-    publishDir "${params.outDir}/fastqc", mode: 'copy',
+    publishDir "${params.outDir}/$sample_id/fastqc", mode: 'copy',
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
 
     input:
-    set val(sample_id), file(reads) from raw_reads_fastqc
+    set sample_id, file(reads) from raw_reads_fastqc
 
     output:
     file "*_fastqc.{zip,html}" into fastqc_results, report_fastqc
@@ -140,16 +116,16 @@ process fastQc {
     fastqc $reads
     """
 }
-
+//TODO: this will need an update based on where they put the UMI
 // Only extract barcodes if umiAware
 if (!params.skipUmi) {
     process debarcode{
         label 'mid_cpu'
         tag "debarcode on $sample_id"
-        publishDir "${params.outDir}/debarcode", mode: 'copy'
+        publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
 
         input:
-        set val(sample_id), file(reads) from raw_reads
+        set sample_id, file(reads) from raw_reads
 
         output:
         set val(sample_id), file('*_R1.fastq.gz') into debarcoded_ch
@@ -170,11 +146,11 @@ if (!params.skipUmi) {
     report_debarcode = Channel.empty()
 }
 
-// There should only be a R1 at 
+// TODO this needs updates from 2D complete as it only uses R1 but there could be an R2 
 process cutAdapt {
     label 'mid_cpu'
     tag "cutAdapt on $name"
-    publishDir "${params.outDir}/cutAdapt", mode: 'copy'
+    publishDir "${params.outDir}/$sample_id/cutAdapt", mode: 'copy'
     
     input:
     set val(name), file(read1) from debarcoded_ch
@@ -202,7 +178,7 @@ process starAlign {
     label 'high_memory'
     label 'mid_cpu'
     tag "starAlign on $name"
-    publishDir "${params.outDir}/star", mode: 'copy'
+    publishDir "${params.outDir}/$name/star", mode: 'copy'
 
 
     input:
@@ -241,7 +217,7 @@ process starAlign {
 process picardAlignSummary {
     label 'low_memory'
     tag "picardAlignSummary on $name"
-    publishDir "${params.outDir}/picardAlignSummary", mode: 'copy'
+    publishDir "${params.outDir}/$name/picardAlignSummary", mode: 'copy'
 
     input:
     set val(name), file(bams) from picardBam_ch
@@ -268,7 +244,7 @@ if (!params.skipUmi) {
         label 'mid_cpu'
         label 'mid_memory'
         tag "umiTagging on $name"
-        publishDir "${params.outDir}/umiTagging", mode: 'copy'
+        publishDir "${params.outDir}/$name/umiTagging", mode: 'copy'
         input:
         set val(name) , file(bams) from umiTagging_ch
 
@@ -293,7 +269,7 @@ if (!params.skipUmi) {
         label 'high_memory'
         label 'mid_cpu'
         tag "dedup on $name"
-        publishDir "${params.outDir}/dedup", mode: 'copy'
+        publishDir "${params.outDir}/$name/dedup", mode: 'copy'
 
         input:
         set val(name), file(bams) from dedup_in_ch
@@ -319,79 +295,17 @@ if (!params.skipUmi) {
     umiTagging_ch.into { BamLong_ch }
     report_dedup = Channel.empty()
 }
-/* Deprecated: from 2D - remove prior to launch
-process splitBamMi {
-    label 'low_memory'
-    tag "splitBamMi on $name"
-    publishDir "${params.outDir}/splitBamMi", mode: 'copy'
-    input:
-    set val(name), file(bams) from splitBamMi_ch
-    file miRNABedFile 
-
-    output:
-    set val(name), file('out.miRNAs.bam') into mirna_bam_ch, bigwig_mirna_bam_ch
-
-    script:
-    (bam, bai) = bams
-    """
-    # Split bam_to_split into long and short RNAs
-    bedtools intersect -a $bam -b $miRNABedFile -f 1 -s > out.miRNAs.bam
-    """
-}
-
-process splitBamLong {
-    label 'low_memory'
-    tag "splitBamLong on $name"
-    publishDir "${params.outDir}/splitBamLong", mode: 'copy'
-    input:
-    set val(name), file(bams) from splitBamLong_ch
-    file miRNABedFile
-
-    output:
-    set val(name), file('out.longRNAs.bam') into longrna_bam_ch, bigwig_long_rna_bam_ch
-
-    script:
-    (bam, bai) = bams
-    """
-    bedtools intersect -a $bam -b $miRNABedFile -f 1 -v -s > out.longRNAs.bam
-    """
-}
-
-process countMicroRNA {
-    label 'mid_cpu'
-    label 'low_memory'
-    tag "countMicroRNA on $name"
-    publishDir "${params.outDir}/microRNACounts", mode: 'copy'
-
-    input:
-    set val(name), file(bam) from mirna_bam_ch
-    file miRNAgtfFile
-
-    output:
-    set val(name), file('gene_counts_miRNA') into mi_counts_ch
-    file 'gene_counts_miRNA*' into report_miRNACounts
-
-    script:
-    strand = params.reverseStrand ? "-s 2" : "-s 1" 
-    """
-    featureCounts -T $task.cpus --primary -O -M -t exon -g product $strand -Q $params.minMapqToCount \
-    -a $miRNAgtfFile \
-    -o ./gene_counts_miRNA \
-    -R BAM ./out.miRNAs.bam
-    """
-}
-*/
-process countLongRNA {
+process countRNA {
     label 'mid_cpu'
     label 'low_memory'
     tag "countLongRNA on $name"
-    publishDir "${params.outDir}/longRNACounts", mode: 'copy'
+    publishDir "${params.outDir}/$name/RNACounts", mode: 'copy'
 
     input:
     set val(name), file(bam) from longrna_bam_ch
     file longRNAgtfFile
     output:
-    set val(name), file('gene_counts_longRNA') into long_counts_ch, counts_xls
+    set val(name), file('gene_counts_longRNA') into counts_ch, counts_xls
     file "gene_counts_longRNA*" into report_longRNACounts
 
     script:
@@ -408,9 +322,9 @@ process calcRPMKTPM {
     label 'low_memory'
     label 'low_cpu'
     tag "calcRPMKTPM on $l_name"
-    publishDir "${params.outDir}/calcRPMKTPM", mode: 'copy'
+    publishDir "${params.outDir}/$l_name/calcRPMKTPM", mode: 'copy'
     input:
-    set val(l_name), file(long_counts) from long_counts_ch
+    set val(l_name), file(long_counts) from counts_ch
 
     output:
     file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls
