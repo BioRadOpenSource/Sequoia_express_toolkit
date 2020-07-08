@@ -79,7 +79,7 @@ reads = params.reads+"*R{1,2}*"
 Channel
     //Todo, make this more robust
     .fromFilePairs( reads, size:-1) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
-    .ifEmpty { exit 1, "Cannot find any reads matching: $reads\nNB: Path needs to be enclosed in quotes!\nNB: Path requires at least one * wildcard!\nIf not using R2 please use --seqType SE" }
+    .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .groupTuple()
     .set { raw_reads_fastqc; raw_reads; raw_reads_validation }
 
@@ -141,7 +141,6 @@ if (!params.skipUmi) {
         """
     }
 } else {
-    /*debarcoded_ch = raw_reads.map{ [it[0], it[1][0]]} // Reduce inputs to just read one in the event that there were 2*/
     debarcoded_ch = raw_reads
     report_debarcode = Channel.empty()
 }
@@ -150,10 +149,10 @@ if (!params.skipUmi) {
 process cutAdapt {
     label 'mid_cpu'
     tag "cutAdapt on $name"
-    publishDir "${params.outDir}/$sample_id/cutAdapt", mode: 'copy'
+    publishDir "${params.outDir}/$name/cutAdapt", mode: 'copy'
     
     input:
-    set val(name), file(read1) from debarcoded_ch
+    set val(name), file(reads) from debarcoded_ch
 
     output:
     set val(name), file( "trimmed_R1.fastq.gz") into trimmed_ch
@@ -302,7 +301,7 @@ process countRNA {
     publishDir "${params.outDir}/$name/RNACounts", mode: 'copy'
 
     input:
-    set val(name), file(bam) from longrna_bam_ch
+    set val(name), file(bam) from BamLong_ch
     file longRNAgtfFile
     output:
     set val(name), file('gene_counts_longRNA') into counts_ch, counts_xls
@@ -321,17 +320,18 @@ process countRNA {
 process calcRPMKTPM {
     label 'low_memory'
     label 'low_cpu'
-    tag "calcRPMKTPM on $l_name"
-    publishDir "${params.outDir}/$l_name/calcRPMKTPM", mode: 'copy'
+    tag "calcRPMKTPM on $name"
+    publishDir "${params.outDir}/$name/calcRPMKTPM", mode: 'copy'
     input:
-    set val(l_name), file(long_counts) from counts_ch
+    set val(name), file(counts) from counts_ch
 
     output:
     file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls
+    val name into repName_ch
 
     script:
     """
-    python3 /opt/biorad/src/calc_rpkm_tpm.py $long_counts ./gene_counts_rpkmtpm.txt
+    python3 /opt/biorad/src/calc_rpkm_tpm.py $counts ./gene_counts_rpkmtpm.txt
     """
 
 }
@@ -339,9 +339,10 @@ process calcRPMKTPM {
 process assembleReport {
     label 'low_memory'
     tag "assembleReport"
-    publishDir "${params.outDir}/report", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
+    publishDir "${params.outDir}/$name/report", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
 
     input:
+    val name from repName_ch
     file annoDirPath
     file(fastqc: 'out/fastqc/*') from report_fastqc.collect()
     file('out/debarcode/*') from report_debarcode.collect().ifEmpty([]) // optional
@@ -366,17 +367,20 @@ process assembleReport {
     """
 }
 
-process nomalizedXLS{
+process combinedXLS{
 	label 'low_memory'
 	tag "coutsAsXls"
-	pubslishDir "${params.outDir}/calcRPMKTPM"
+	pubslishDir "${params.outDir}/$name/calcRPMKTPM", mode:copy
 
 	input:
-
+	file rpkm from normalize_xls
+	val(name), file(counts) from counts_xls
 	output:
 	
 	script:
-	
+	"""
+	python /opt/biorad/src/converge_xls.py $counts $rpkm 
+	"""
 
 }
 
