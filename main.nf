@@ -355,6 +355,7 @@ process assembleReport {
     output:
     file 'htmlReport.html'
     file 'pdfReport.pdf'
+    file 'tsvReport.tsv'
 
     script:
     """
