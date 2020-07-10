@@ -57,14 +57,6 @@ RUN curl -SLO https://github.com/alexdobin/STAR/archive/${STAR_VERSION}.tar.gz &
 ENV PATH /opt/STAR-${STAR_VERSION}/bin/Linux_x86_64:$PATH
 ######### End STAR Setup #############
 
-######### BEDTOOLS Setup #############
-ENV BEDTOOLS_VERSION v2.28.0
-RUN mkdir -p ${DEST_DIR}/bedtools
-RUN wget https://github.com/arq5x/bedtools2/releases/download/${BEDTOOLS_VERSION}/bedtools -P ${DEST_DIR}/bedtools/
-RUN chmod a+x ${DEST_DIR}/bedtools/bedtools
-ENV PATH ${DEST_DIR}/bedtools:$PATH
-######### END BEDTOOLS Setup #########
-
 ######### PICARD Setup ###############
 ENV PICARD_VERSION 2.20.0
 RUN mkdir -p ${DEST_DIR}/picard
@@ -97,13 +89,6 @@ RUN pip3 install pysam
 ######### RPKM/TPM Setup #############
 RUN pip3 install pandas
 ######### End RPKM/TPM Setup #########
-
-######### BigWig Setup ###############
-RUN mkdir /opt/tools && wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bedGraphToBigWig -O /opt/tools/bedGraphToBigWig && chmod a+x /opt/tools/bedGraphToBigWig
-ENV PATH /opt/tools/:$PATH
-RUN mkdir -p /ref/hg38/sizes
-RUN wget http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes -O /ref/hg38/sizes/hg38.chrom.sizes && chmod a+r /ref/hg38/sizes/hg38.chrom.sizes 
-######### End BigWig Setup ###########
 
 ######### R Setup ###############
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
