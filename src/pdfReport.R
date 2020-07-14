@@ -1,6 +1,6 @@
 #' ---
 #' title: |
-#'   | \vspace{2cm} \LARGE{SEQuoia Analysis Report}
+#'   | \vspace{2cm} \LARGE{SEQuoia Express Analysis Report}
 #' header-includes:
 #' - \usepackage{titling}
 #' - \usepackage{fontspec}
@@ -372,17 +372,12 @@ colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
 
-#parse genecounts summary for miRNA
-miRNAcounts <- read.table(paste(countsDir, "gene_counts_miRNA.summary", sep="/"), skip=1)
-colnames(miRNAcounts) <- c("Result", "Count")
-miRNAcounts$Result <- gsub("_", " ", miRNAcounts$Result)
-miRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(miRNAcounts$Count)), miRNAcounts)
-
 #handle biotypes
 countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 countMicro <- read.table(paste(countsDir, "gene_counts_miRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 countMicro$gene_biotype <- "miRNA"
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
+biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
 
 countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
 countAll <- rbind(countLong, countMicro)
@@ -410,13 +405,6 @@ kable(longRNAcounts, "latex", booktabs = T) %>%
 
 #' \newpage
 
-#' `r if(exists("miRNAcounts")) { "## miRNA Counts" }`
-#+ eval=exists("miRNAcounts"), echo=FALSE, fig.asp=1, fig.align="center", message=F
-kable(miRNAcounts, "latex", booktabs = T) %>%
-  kable_styling(latex_options = c("striped", "hold_position"))
-
-#' \newpage
-
 #' `r if(exists("countByBiotype")) { "## Gene Biotypes" }`
 #+ eval=exists("countByBiotype"), echo=FALSE, fig.asp=1, fig.align="center", message=F
 kable(countByBiotype, "latex", booktabs = T) %>%
@@ -429,7 +417,7 @@ pl
 
 #' `r if(TRUE) { "# Pipeline Metadata" }`
 #+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
-env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","BEDTOOLS_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
 env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
 umi_tools_version <- system("umi_tools --version", intern=T)
 umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]

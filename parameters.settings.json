@@ -127,6 +127,27 @@
 			"choices": [0, 42]
 		},
 		{
+			"name": "minGeneCutoff",
+			"label": "Option to define minium threshold for what genes are reported",
+			"usage": "Provide double value to cutt off how many reads are minimum",
+			"type": "double",
+			"renderer": "range",
+			"defualt_value": 0, 
+			"group": "advanced",
+			"choices": [-9e7, 9e7]
+		},
+		{
+			"name": "minGeneType",
+			"label": "Option to define minium threshold type for genes are reported",
+			"usage": "Provide integer value to cutt off how many reads are minimum",
+			"type": "string",
+			"renderer": "check-box",
+			"defualt_value": "reads", 
+			"group": "advanced",
+			"choices": ["reads","RPKM","TPM"]
+
+		},
+		{
 			"name": "max_cpus",
 			"label": "Max CPUs",
 			"usage": "The max number of cpus the pipeline may use. Defaults provided by -profile.",

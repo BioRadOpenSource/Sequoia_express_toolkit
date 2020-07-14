@@ -1,5 +1,5 @@
 #' ---
-#' title: "SEQuoia Analysis Report"
+#' title: "SEQuoia Express Analysis Report"
 #' output:
 #'  html_document:
 #'    toc: true
@@ -53,7 +53,7 @@ dedupDirExists <- length(dedupDir) == 1
 write(paste("dedupDirExists: ", dedupDirExists), stderr())
 
 #counts
-countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="miRNA.summary")))
+countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="LongRNA.summary")))
 countsDirExists <- length(countsDir) == 1
 write(paste("countsDirExists: ", countsDirExists), stderr())
 
@@ -437,63 +437,33 @@ longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAco
 longRNAcounts$`Count` <- cell_spec(
   prettyNum(longRNAcounts$`Count`, big.mark=",", scientific=FALSE),
   popover = spec_popover(
-    content = c("Total number of miRNA alignments",
-		"longRNA alignments assigned to features",
-                "longRNA alignments not counted due to not mapping",
-                "longRNA alignments not counted due to mapping quality below MAPQ threshold",
-                "longRNA alignments not counted due to chimerism (pairs located on different chromosomes)",
-                "longRNA alignments not counted due to falling below the minimum fragment length threshold",
-                "longRNA alignments not counted due to being marked as a duplicate",
-                "longRNA alignments not counted due to being a multimapped read",
-                "longRNA alignments not counted due to being a secondary alignment",
-                "longRNA alignments not counted due to not spanning a splice junction",
-                "longRNA alignments not counted due to not being in an annotated region",
-                "longRNA alignments not counted due to not sufficiently overlapping an annotated region",
-                "longRNA alignments not counted due to overlapping two or more annotated regions"),
+    content = c("Total number of RNA alignments",
+		"alignments assigned to features",
+                "alignments not counted due to not mapping",
+                "alignments not counted due to mapping quality below MAPQ threshold",
+                "alignments not counted due to chimerism (pairs located on different chromosomes)",
+                "alignments not counted due to falling below the minimum fragment length threshold",
+                "alignments not counted due to being marked as a duplicate",
+                "alignments not counted due to being a multimapped read",
+                "alignments not counted due to being a secondary alignment",
+                "alignments not counted due to not spanning a splice junction",
+                "alignments not counted due to not being in an annotated region",
+                "alignments not counted due to not sufficiently overlapping an annotated region",
+                "alignments not counted due to overlapping two or more annotated regions"),
     title = NULL,
     position = "left"
   )
 )
 
-#parse genecounts summary for miRNA
-write("Processing gene_counts_miRNA.summary", stderr())
-miRNAcounts <- read.table(paste(countsDir, "gene_counts_miRNA.summary", sep="/"), skip=1)
-colnames(miRNAcounts) <- c("Result", "Count")
-miRNAcounts$Result <- gsub("_", " ", miRNAcounts$Result)
-miRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(miRNAcounts$Count)), miRNAcounts)
-
-miRNAcounts$`Count` <- cell_spec(
-  prettyNum(miRNAcounts$`Count`, big.mark=",", scientific=FALSE),
-  popover = spec_popover(
-    content = c("Total number of miRNA alignments",
-		"miRNA alignments assigned to features",
-                "miRNA alignments not counted due to not mapping",
-                "miRNA alignments not counted due to mapping quality below MAPQ threshold",
-                "miRNA alignments not counted due to chimerism (pairs located on different chromosomes)",
-                "miRNA alignments not counted due to falling below the minimum fragment length threshold",
-                "miRNA alignments not counted due to being marked as a duplicate",
-                "miRNA alignments not counted due to being a multimapped read",
-                "miRNA alignments not counted due to being a secondary alignment",
-                "miRNA alignments not counted due to not spanning a splice junction",
-                "miRNA alignments not counted due to not being in an annotated region",
-                "miRNA alignments not counted due to not sufficiently overlapping an annotated region",
-                "miRNA alignments not counted due to overlapping two or more annotated regions"),
-    title = NULL,
-    position = "left"
-  )
-) 
-
 #handle biotypes
 write("Processing gene_counts_longRNA", stderr())
 countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-write("Processing gene_counts_miRNA", stderr())
-countMicro <- read.table(paste(countsDir, "gene_counts_miRNA", sep="/"), header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-countMicro$gene_biotype <- "miRNA"
 write("Processing gene_biotypes.tsv", stderr())
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
+biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
 
 countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
-countAll <- rbind(countLong, countMicro)
+countAll <- countLong
 countByBiotype <- countAll %>% filter(!is.na(gene_biotype)) %>% group_by(gene_biotype) %>% summarise(count = sum(Count)) %>% arrange(-count)
 countByBiotype$gene_biotype <- factor(countByBiotype$gene_biotype, levels = unique(countByBiotype$gene_biotype)[order(countByBiotype$count, decreasing = TRUE)])
 countByBiotype <- countByBiotype %>% filter(count > 0) #filter biotypes with no counts
@@ -517,12 +487,9 @@ cat("###", "longRNA count summary", "\n")
 kable(longRNAcounts, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
 cat(" \n \n")
 
-cat("###", "miRNA count summary", "\n")
-kable(miRNAcounts, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
-cat(" \n \n")
-
 cat("###", "Gene Biotypes", "\n")
 #render table
+#TODO: in oeder to sort might have to include DT pacakge
 kable(countByBiotype, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
 #render plot
 pl
@@ -530,7 +497,7 @@ cat(" \n \n")
 
 #' `r if(TRUE) { "## Pipeline Metadata {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
-env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","BEDTOOLS_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
 env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
 umi_tools_version <- system("umi_tools --version", intern=T)
 umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
