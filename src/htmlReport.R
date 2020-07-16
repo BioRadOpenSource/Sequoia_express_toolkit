@@ -20,6 +20,7 @@ library(tibble)
 library(plotly)
 library(fastqcr)
 library(rlist)
+library(DT)
 
 #muting warnings
 options(warn=-1)
@@ -483,14 +484,18 @@ countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientif
 
 #render tables behind pills
 write("Rendering counts information", stderr())
-cat("###", "longRNA count summary", "\n")
-kable(longRNAcounts, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
+cat("###", "RNA count summary", "\n")
+kable(countLong, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
+cat(" \n \n")
+
+cat("###", "RNA count summary apendix", "\n")
+
 cat(" \n \n")
 
 cat("###", "Gene Biotypes", "\n")
 #render table
-#TODO: in oeder to sort might have to include DT pacakge
-kable(countByBiotype, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
+#kable(countByBiotype, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
+datatable(countByBiotype, class = 'cell-baorder stipe')
 #render plot
 pl
 cat(" \n \n")
