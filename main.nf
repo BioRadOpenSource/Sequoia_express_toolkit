@@ -304,7 +304,7 @@ process countRNA {
     set val(name), file(bam) from BamLong_ch
     file longRNAgtfFile
     output:
-    set val(name), file('gene_counts_longRNA') into counts_ch, counts_xls
+    set val(name), file('gene_counts_longRNA') into counts_ch, counts_xls, count_threshold_ch
     file "gene_counts_longRNA*" into report_longRNACounts
 
     script:
@@ -326,8 +326,8 @@ process calcRPMKTPM {
     set val(name), file(counts) from counts_ch
 
     output:
-    file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls
-    val name into repName_ch
+    file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
+    val name into repName_ch, thresh_ch
 
     script:
     """
@@ -379,8 +379,13 @@ if(params.minGeneType != "none"){
 		// take in user specified cutoff and type and generate appropriate report
 		// should also include biotype 
 		input:
-		
+		val name from thresh_ch
+		file('out/
+				
+
 		output:
+		file "Full_count_table.csv" 
+		file "Filter_count_table.csv"
 
 		script:
 		"""
@@ -396,9 +401,10 @@ process combinedXLS{
 	pubslishDir "${params.outDir}/$name/calcRPMKTPM", mode:copy
 
 	input:
-	file rpkm from normalize_xls
+	file rpkm from normalize_xls.collect()
 	val(name), file(counts) from counts_xls
 	output:
+	file "readcount_report.xlsx"
 	
 	script:
 	"""

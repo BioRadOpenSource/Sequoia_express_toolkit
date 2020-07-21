@@ -18,5 +18,24 @@ countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), sep="\
 colnames(biotypes)[1] = "Gene"
 countsWbiotype = merge(countLong, biotypes[biotypes[,"Gene"] %in% countLong[,"Gene"],], by = c("Gene"), all=T)
 normal <- read.table(paste(rpkmDir,"gene_counts_rpkmtpm.txt", sep="/"), sep="\t", header=T) 
+colnames(normal)[1] = "Gene"
+together = merge(countsWbiotype, normal, by="Gene")
 
+write.table(together, "Full_count_table.csv", sep=",", header=T)
+
+if(type =="reads"){
+	together = together[together$Count >value,]
+	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+}
+else if( type == "RPKM"){
+	together = together[together$RPKM >value,]
+	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+}
+else if( type == "TPM"){
+	together = together[together$TPM >value,]
+	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+}
+else{
+	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+}
 

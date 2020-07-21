@@ -134,7 +134,7 @@
 			"renderer": "range",
 			"defualt_value": 0, 
 			"group": "advanced",
-			"choices": [-9e7, 9e7]
+			"choices": [0, 9e7]
 		},
 		{
 			"name": "minGeneType",
