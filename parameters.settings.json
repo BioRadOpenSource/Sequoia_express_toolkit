@@ -142,9 +142,9 @@
 			"usage": "Provide integer value to cutt off how many reads are minimum",
 			"type": "string",
 			"renderer": "check-box",
-			"defualt_value": "reads", 
+			"defualt_value": "none", 
 			"group": "advanced",
-			"choices": ["reads","RPKM","TPM"]
+			"choices": ["none","reads","RPKM","TPM"]
 
 		},
 		{

@@ -342,6 +342,7 @@ process assembleReport {
     publishDir "${params.outDir}/$name/report", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
 
     input:
+    val complete from threshold_ch
     val name from repName_ch
     file annoDirPath
     file(fastqc: 'out/fastqc/*') from report_fastqc.collect()
@@ -369,7 +370,26 @@ process assembleReport {
     cp ./tmp/csvReport.csv ./
     """
 }
+if(params.minGeneType != "none"){
+	process thresholdResults{
+		label 'low_memory'
+		tag 'thresholdGenes'
+		publishDir "${params.outDir}/$name/RNAcounts", mode:copy
 
+		// take in user specified cutoff and type and generate appropriate report
+		// should also include biotype 
+		input:
+		
+		output:
+
+		script:
+		"""
+		cp /opt/boprad/src/threshold_report.R ./tmp/threshold_report.R
+		Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+		
+		"""
+	}
+}
 process combinedXLS{
 	label 'low_memory'
 	tag "coutsAsXls"

@@ -103,15 +103,17 @@ longRNAcounts <- read.table(paste(countsDir, "gene_counts_longRNA.summary", sep=
 colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
+countLong = countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+longRNAcounts <- rbind(,longRNAcounts,data.frame(Result="Genes with >0 reads", Count=dim(countLong[countLong$Count >1,])[1]))
 
-
-### biotypes 
+### biotypes w/ threshold 
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
 countLong = countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 #countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
 #counts with biotypes as one table 
 colnames(biotypes)[1] = "Gene"
 countsWbiotype = merge(countLong, biotypes[biotypes[,"Gene"] %in% countLong[,"Gene"],], by = c("Gene"), all=T) 
+
 
 #enviormental metadata from other reports
 env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","BEDTOOLS_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
@@ -136,46 +138,52 @@ env <- rbind(containerInfo, localVars, env)
 env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
 colnames(env) <- NULL
 
+#Show threshold genes (will be gene count folder) 
+
+
+#show threshold with read count filter
+
+
 #combine each to one csv
 sink("Sequoia_express_report.csv")
 load.image("/opt/biorad/src/vendor-logo.png")
 cat("\n")
-cat("Fastqc Report"
+cat("Fastqc Report\n")
 write.csv(r1df)
 cat("___________________________________")
 cat("\n")
 cat("\n")
-cat("Debarcode Report")
+cat("Debarcode Report\n")
 write.csv(debarcode)
 cat("___________________________________")
 cat("\n")
 cat("\n")
-cat("Trimming Report")
+cat("Trimming Report\n")
 write.csv(trim)
 cat("___________________________________")
 cat("\n")
 cat("\n")
-cat("Alignment Stats")
+cat("Alignment Stats\n")
 write.csv(picard)
 cat("___________________________________")
 cat("\n")
 cat("\n")
-cat("Alignement Report")
+cat("Alignement Report\n")
 write.csv(starReport)
 cat("___________________________________")
 cat("\n")
 cat("\n")
-cat("Gene Count Summary")
+cat("Gene Count Summary\n")
 write.csv(longRNAcounts)
 cat("___________________________________")
 cat("\n")
 cat("\n")
-cat("Count table with biotypes")
+cat("Count table with biotypes\n")
 write.csv(countsWbiotype)
 cat("___________________________________")
 cat("\n")
 cat("\n")
-cat("Enviorment Metadata")
+cat("Enviorment Metadata\n")
 write.csv(env)
 cat("___________________________________")
 cat("\n")
