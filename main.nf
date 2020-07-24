@@ -188,6 +188,7 @@ process starAlign {
     output:
     set val(name), file("Aligned.sortedByCoord.out.bam*") into umiTagging_ch, picardBam_ch
     file "Log.final.out" into report_star
+    file "Unmapped.out.mate*" into unmapped_rna
 
     script:
            """
@@ -357,7 +358,8 @@ process assembleReport {
     file 'htmlReport.html'
     file 'pdfReport.pdf'
     file 'csvReport.csv'
-
+    val "$name" into meta_ch
+    
     script:
     """
     mkdir -p ./tmp
@@ -412,6 +414,23 @@ process combinedXLS{
 	"""
 
 }
+process metaReport{
+	tag "Overall Batch Summary"
+	pubslishDir "${params.outDir}/", mode:copy
+	// generate a high level summary of batch run
+	
+	input:
+	val x from meta_ch
+
+	output:
+	file batch_summary.csv
+	
+	"""
+	Rscript /opt/biorad/src/meta_report.R "${params.outDir}"	
+
+	"""
+}
+
 
 /* Helper Functions */
 def readParamsFromJsonSettings() {
