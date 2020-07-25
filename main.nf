@@ -81,9 +81,9 @@ Channel
     .fromFilePairs( reads, size:-1) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .groupTuple()
-    .set { raw_reads_fastqc; raw_reads; raw_reads_validation }
+    .set { read_files}
 
-
+read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation}
 // Begin Processing
 
 if (params.validateInputs) {
@@ -150,7 +150,7 @@ process cutAdapt {
     label 'mid_cpu'
     tag "cutAdapt on $name"
     publishDir "${params.outDir}/$name/cutAdapt", mode: 'copy'
-    
+
     input:
     set val(name), file(reads) from debarcoded_ch
 
@@ -159,6 +159,7 @@ process cutAdapt {
     file "trimlog.log" into report_trim
 
     script:
+    read1 = reads[1]
     if (!params.noTrim) {
     """
     cutadapt -u 1 -a "A{10}" -m ${params.minBp} -j $task.cpus \
@@ -292,7 +293,7 @@ if (!params.skipUmi) {
         """
     }
 } else {
-    umiTagging_ch.into { BamLong_ch }
+    umiTagging_ch.set { BamLong_ch }
     report_dedup = Channel.empty()
 }
 process countRNA {
@@ -336,6 +337,34 @@ process calcRPMKTPM {
     """
 
 }
+if(params.minGeneType != "none"){
+        process thresholdResults{
+                label 'low_memory'
+                tag 'thresholdGenes'
+                publishDir "${params.outDir}/$name/RNAcounts", mode:'copy'
+
+                // take in user specified cutoff and type and generate appropriate report
+                // should also include biotype 
+                input:
+                val name from thresh_ch
+
+                output:
+                file "Full_count_table.csv"
+                file "Filter_count_table.csv"
+                val "complete" into threshold_ch
+
+                script:
+                """
+                cp /opt/boprad/src/threshold_report.R ./tmp/threshold_report.R
+                Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+                
+                """
+        }
+}
+else{
+        threshold_ch = Channel.of("Complete")
+}
+
 
 process assembleReport {
     label 'low_memory'
@@ -372,39 +401,14 @@ process assembleReport {
     cp ./tmp/csvReport.csv ./
     """
 }
-if(params.minGeneType != "none"){
-	process thresholdResults{
-		label 'low_memory'
-		tag 'thresholdGenes'
-		publishDir "${params.outDir}/$name/RNAcounts", mode:copy
-
-		// take in user specified cutoff and type and generate appropriate report
-		// should also include biotype 
-		input:
-		val name from thresh_ch
-		file('out/
-				
-
-		output:
-		file "Full_count_table.csv" 
-		file "Filter_count_table.csv"
-
-		script:
-		"""
-		cp /opt/boprad/src/threshold_report.R ./tmp/threshold_report.R
-		Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
-		
-		"""
-	}
-}
 process combinedXLS{
 	label 'low_memory'
 	tag "coutsAsXls"
-	pubslishDir "${params.outDir}/$name/calcRPMKTPM", mode:copy
+	publishDir "${params.outDir}/$name/calcRPMKTPM", mode:'copy'
 
 	input:
 	file rpkm from normalize_xls.collect()
-	val(name), file(counts) from counts_xls
+	val name, file(counts) from counts_xls.collect()
 	output:
 	file "readcount_report.xlsx"
 	
@@ -416,7 +420,7 @@ process combinedXLS{
 }
 process metaReport{
 	tag "Overall Batch Summary"
-	pubslishDir "${params.outDir}/", mode:copy
+	publishDir "${params.outDir}/", mode:'copy'
 	// generate a high level summary of batch run
 	
 	input:
@@ -497,14 +501,15 @@ def bioradHeader() {
     c_white = params.monochrome_logs ? '' : "\033[0;37m";
     return """
     ${c_reset}
-    ${c_green} / -----------------------------------------------------------\
-    ${c_green}/ __________.__                __________             .___     \
-    ${c_green}| \\______   \\__|____           \\______   \\____      __| _/ |
+    ${c_green}
+    ${c_green}/-----------------------------------------------------------\\ 
+    ${c_green}| __________.__                __________             .___  |
+    ${c_green}|  \\_____   \\__|____           \\______   \\____      __| _/  |
     ${c_green}|   |  |  _/  |/  _ \\   ______   |     _/\\__  \\   / __ |    |
     ${c_green}|   |  |   \\  (  <_> ) /_____/   |  |   \\ / __ \\_/ /_/ |    |
-    ${c_green}|   |____  /__|\\____/            |__|_  /(____  /\\____ |     |
-    ${c_green}|        \\/                           \\/      \\/      \\/   |
-    ${c_green}\_____________________________________________________________/
+    ${c_green}|   |____  /__|\\____/            |__|_  /(____  /\\____ |    |
+    ${c_green}|        \\/                           \\/      \\/      \\/    |
+    ${c_green}\\___________________________________________________________/
     ${c_reset}
     """.stripIndent()
 }
