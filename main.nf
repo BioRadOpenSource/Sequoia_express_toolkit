@@ -74,13 +74,12 @@ log.info "----------------------------------------------------"
 
 
 
-reads = params.reads+"*R{1,2}*"
+reads = params.reads+"*{R1,R2}*"
 
 Channel
     //Todo, make this more robust
     .fromFilePairs( reads, size:-1) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
-    .groupTuple()
     .set { read_files}
 
 read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation}
@@ -159,7 +158,7 @@ process cutAdapt {
     file "trimlog.log" into report_trim
 
     script:
-    read1 = reads[1]
+    read1 = reads[0]
     if (!params.noTrim) {
     """
     cutadapt -u 1 -a "A{10}" -m ${params.minBp} -j $task.cpus \
