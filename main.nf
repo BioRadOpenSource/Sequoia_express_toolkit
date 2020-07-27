@@ -293,10 +293,12 @@ if (!params.skipUmi) {
         """
     }
 } else {
-    umiTagging_ch.set { BamLong_ch }
+    BamLong_ch =  umiTagging_ch 
     report_dedup = Channel.empty()
 }
-process countRNA {
+
+
+process count_rna {
     label 'mid_cpu'
     label 'low_memory'
     tag "countLongRNA on $name"
@@ -305,9 +307,10 @@ process countRNA {
     input:
     set val(name), file(bam) from BamLong_ch
     file longRNAgtfFile
+    
     output:
-    set val(name), file('gene_counts_longRNA') into counts_ch, counts_xls, count_threshold_ch
-    file "gene_counts_longRNA*" into report_longRNACounts
+    val(name) into (counts_name, xls_name, threshold_name)
+    file "gene_counts_longRNA*" into (report_longRNACounts, counts_ch, counts_xls, count_threshold_ch)
 
     script:
     strand = params.reverseStrand ? "-s 2" : "-s 1" 
@@ -325,7 +328,8 @@ process calcRPMKTPM {
     tag "calcRPMKTPM on $name"
     publishDir "${params.outDir}/$name/calcRPMKTPM", mode: 'copy'
     input:
-    set val(name), file(counts) from counts_ch
+    val name from counts_name
+    file(counts) from counts_ch
 
     output:
     file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
@@ -347,6 +351,8 @@ if(params.minGeneType != "none"){
                 // should also include biotype 
                 input:
                 val name from thresh_ch
+		file gene_rpkm from rpkm_threshold_ch 
+		
 
                 output:
                 file "Full_count_table.csv"
@@ -408,13 +414,15 @@ process combinedXLS{
 
 	input:
 	file rpkm from normalize_xls.collect()
-	val name, file(counts) from counts_xls.collect()
+	val(name) from xls_name 
+        file(count_file) from counts_xls
+
 	output:
 	file "readcount_report.xlsx"
 	
 	script:
 	"""
-	python /opt/biorad/src/converge_xls.py $counts $rpkm 
+	python /opt/biorad/src/converge_xls.py $count_file $rpkm 
 	"""
 
 }
@@ -427,7 +435,7 @@ process metaReport{
 	val x from meta_ch
 
 	output:
-	file batch_summary.csv
+	file 'batch_summary.csv'
 	
 	"""
 	Rscript /opt/biorad/src/meta_report.R "${params.outDir}"	
