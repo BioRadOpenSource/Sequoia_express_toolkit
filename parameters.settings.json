@@ -8,7 +8,6 @@
 			"type": "string",
 			"renderer": "file",
 			"group": "invisible",
-			"pattern": ".*(R1_*\\.fastq\\.gz$|R2_*\\.fastq\\.gz$)",
 			"required": true
 
 		},

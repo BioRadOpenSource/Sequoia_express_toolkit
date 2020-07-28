@@ -55,7 +55,7 @@ summary['Trace Dir'] = params.tracedir
 summary['geneId'] = geneId
 summary['sjdb GTF File'] = sjdbGTFFile
 summary['ref Flat File'] = refFlatFile
-summary['Ribosoma Interval File'] = ribosomalIntervalFile
+summary['Ribosomal Intervals'] = ribosomalIntervalFile
 summary['Long RNA GTF File'] = longRNAgtfFile
 summary['Sizes File'] = sizesFile
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -188,7 +188,7 @@ process starAlign {
     output:
     set val(name), file("Aligned.sortedByCoord.out.bam*") into umiTagging_ch, picardBam_ch
     file "Log.final.out" into report_star
-    file "Unmapped.out.mate*" into unmapped_rna
+    file ("Unmapped.out.mate*")
 
     script:
            """
@@ -205,7 +205,6 @@ process starAlign {
         --outReadsUnmapped Fastx \
         --outSAMtype BAM SortedByCoordinate \
         --outSAMmultNmax 1 \
-        # ^ do not print mms, just report in NH tag
         --outMultimapperOrder Random \
         --runRNGseed 1234 \
         --outFileNamePrefix ./ > star_log.txt 2>&1
@@ -292,7 +291,7 @@ if (!params.skipUmi) {
         """
     }
 } else {
-    BamLong_ch =  umiTagging_ch 
+    umiTagging_ch.into { BamLong_ch} 
     report_dedup = Channel.empty()
 }
 
@@ -312,12 +311,13 @@ process count_rna {
     file "gene_counts_longRNA*" into (report_longRNACounts, counts_ch, counts_xls, count_threshold_ch)
 
     script:
-    strand = params.reverseStrand ? "-s 2" : "-s 1" 
+    strand = params.reverseStrand ? "-s 2" : "-s 1"
+    just_bam = bam[0] 
     """
     featureCounts -T $task.cpus --primary -M -t exon -g $geneId $strand -Q $params.minMapqToCount \
     -a $longRNAgtfFile \
     -o ./gene_counts_longRNA \
-    -R BAM ./out.longRNAs.bam
+    -R BAM $just_bam
     """
 }
 
@@ -336,7 +336,7 @@ process calcRPMKTPM {
 
     script:
     """
-    python3 /opt/biorad/src/calc_rpkm_tpm.py $counts ./gene_counts_rpkmtpm.txt
+    python3 /opt/biorad/src/calc_rpkm_tpm.py gene_counts_longRNA ./gene_counts_rpkmtpm.txt
     """
 
 }
@@ -380,13 +380,13 @@ process assembleReport {
     val complete from threshold_ch
     val name from repName_ch
     file annoDirPath
-    file(fastqc: 'out/fastqc/*') from report_fastqc.collect()
-    file('out/debarcode/*') from report_debarcode.collect().ifEmpty([]) // optional
-    file('out/cutAdapt/*') from report_trim.collect()
-    file('out/star/*') from report_star.collect() 
-    file('out/star/*') from report_picard.collect() // Goes into star for reasons
-    file('out/umitools/*') from report_dedup.collect().ifEmpty([]) // optional
-    file('out/counts/*') from report_longRNACounts.collect()
+    file(fastqc: "out/fastqc/*") from report_fastqc
+    file("out/debarcode/*") from report_debarcode.ifEmpty([]) // optional
+    file("out/cutAdapt/*") from report_trim
+    file("out/star/*") from report_star 
+    file("out/star/*") from report_picard // Goes into star for reasons
+    file("out/umitools/*") from report_dedup.ifEmpty([]) // optional
+    file("out/counts/*") from report_longRNACounts
 
     output:
     file 'htmlReport.html'
@@ -412,7 +412,7 @@ process combinedXLS{
 	publishDir "${params.outDir}/$name/calcRPMKTPM", mode:'copy'
 
 	input:
-	file rpkm from normalize_xls.collect()
+	file rpkm from normalize_xls
 	val(name) from xls_name 
         file(count_file) from counts_xls
 
