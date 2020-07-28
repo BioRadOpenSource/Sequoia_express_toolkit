@@ -421,7 +421,7 @@ process combinedXLS{
 	
 	script:
 	"""
-	python /opt/biorad/src/converge_xls.py $count_file $rpkm 
+	python3 /opt/biorad/src/converge_xls.py $count_file $rpkm 
 	"""
 
 }

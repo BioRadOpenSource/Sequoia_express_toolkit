@@ -14,7 +14,7 @@
 library(knitr)
 library(kableExtra)
 library(dplyr)
-library(data.table)
+#library(data.table)
 library(ggplot2)
 library(tibble)
 library(plotly)
