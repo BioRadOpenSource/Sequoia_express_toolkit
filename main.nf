@@ -421,7 +421,7 @@ process combinedXLS{
 	
 	script:
 	"""
-	python3 /opt/biorad/src/converge_xls.py $count_file $rpkm 
+	python3 /opt/biorad/src/converge_xls.py gene_counts_longRNA $rpkm 
 	"""
 
 }
