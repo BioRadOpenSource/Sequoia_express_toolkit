@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 LABEL Bio-Rad Support <support@bio-rad.com>
 
@@ -14,7 +14,13 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     libbz2-dev \
     liblzma-dev
- 
+
+######### Fix time and date interaction
+RUN export DEBIAN_FRONTEND=noninteractive
+RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+RUN apt-get install -y tzdata
+RUN dpkg-reconfigure --frontend noninteractive tzdata
+######################################
 
 ######### FastQC Setup ###############
 RUN apt-get install -y \
@@ -41,7 +47,7 @@ RUN apt-get install -y \
 RUN pip3 install --upgrade pip setuptools
 
 RUN pip3 install --upgrade pip setuptools
-RUN pip3 install --user --upgrade cutadapt
+RUN pip3 install --user --upgrade 'cutadapt==2.7'
 RUN ln -s ~/.local/bin/cutadapt /usr/bin/
 ######### End Cutadapt Setup #########
 
@@ -56,14 +62,6 @@ ENV STAR_VERSION 2.7.0f
 RUN curl -SLO https://github.com/alexdobin/STAR/archive/${STAR_VERSION}.tar.gz && tar -zxvf ${STAR_VERSION}.tar.gz --directory /opt/ && rm ${STAR_VERSION}.tar.gz
 ENV PATH /opt/STAR-${STAR_VERSION}/bin/Linux_x86_64:$PATH
 ######### End STAR Setup #############
-
-######### BEDTOOLS Setup #############
-ENV BEDTOOLS_VERSION v2.28.0
-RUN mkdir -p ${DEST_DIR}/bedtools
-RUN wget https://github.com/arq5x/bedtools2/releases/download/${BEDTOOLS_VERSION}/bedtools -P ${DEST_DIR}/bedtools/
-RUN chmod a+x ${DEST_DIR}/bedtools/bedtools
-ENV PATH ${DEST_DIR}/bedtools:$PATH
-######### END BEDTOOLS Setup #########
 
 ######### PICARD Setup ###############
 ENV PICARD_VERSION 2.20.0
@@ -81,6 +79,16 @@ RUN curl -SLO https://sourceforge.net/projects/subread/files/subread-${SUBREAD_V
 ENV PATH ${DEST_DIR}/subread-${SUBREAD_VERSION}-Linux-x86_64/bin/:$PATH
 ######### End Subread Setup ##########
 
+######### Sambamba Setup #############
+ENV SAMBAMBA_VERSION 0.6.9
+RUN mkdir -p ${DEST_DIR}/sambamba
+RUN curl -SLO https://github.com/biod/sambamba/releases/download/v${SAMBAMBA_VERSION}/sambamba-${SAMBAMBA_VERSION}-linux-static.gz \
+    && unpigz sambamba-${SAMBAMBA_VERSION}-linux-static.gz && mv sambamba-${SAMBAMBA_VERSION}-linux-static ${DEST_DIR}/sambamba/sambamba
+RUN chmod a+x ${DEST_DIR}/sambamba/sambamba
+ENV PATH ${DEST_DIR}/sambamba/:$PATH
+######### End Sambamba Setup #########
+
+
 ######### Pysam Setup ################
 RUN pip3 install pysam
 ######### End Pysam Setup ############
@@ -95,17 +103,17 @@ RUN pip3 install openpyxl
 ####################################
 
 ######### R Setup ###############
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
 RUN apt-get update && apt-get install -y \
     apt-transport-https \
     pandoc \
     libcurl4-openssl-dev \
     libssl-dev \
     libxml2-dev \
-    fonts-freefont-ttf
-RUN apt-get install -y r-base
+    fonts-freefont-ttf 
+
+RUN apt-get install -y r-base -q
 RUN Rscript -e 'install.packages("XML", repos = "http://www.omegahat.net/R")'
-RUN Rscript -e 'install.packages(c("dplyr", "knitr", "rmarkdown", "kableExtra", "ggplot2", "plotly", "fastqcr", "data.table", "tibble", "rlist", "tinytex", "webshot"), repos = "http://cran.r-project.org")'
+RUN Rscript -e 'install.packages(c("dplyr", "knitr", "rmarkdown", "kableExtra", "ggplot2", "plotly", "fastqcr", "data.table", "tibble", "rlist", "tinytex", "webshot", "DT"), repos = "http://cran.r-project.org")'
 RUN Rscript -e 'tinytex::install_tinytex()'
 RUN Rscript -e 'webshot::install_phantomjs()'
 RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell"))'
