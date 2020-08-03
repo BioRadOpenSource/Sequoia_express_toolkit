@@ -116,7 +116,7 @@ RUN Rscript -e 'install.packages("XML", repos = "http://www.omegahat.net/R")'
 RUN Rscript -e 'install.packages(c("dplyr", "knitr", "rmarkdown", "kableExtra", "ggplot2", "plotly", "fastqcr", "data.table", "tibble", "rlist", "tinytex", "webshot", "DT"), repos = "http://cran.r-project.org")'
 RUN Rscript -e 'tinytex::install_tinytex()'
 RUN Rscript -e 'webshot::install_phantomjs()'
-RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell"))'
+RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell", "titling","mathspec"))'
 ######### End R Setup ###########
 
 WORKDIR /opt/biorad
@@ -129,5 +129,5 @@ ARG SOURCE_BRANCH
 ARG SOURCE_COMMIT
 RUN printf "Container Name: ${IMAGE_NAME:-local}\n" > imageInfo.txt
 RUN printf "Source Branch: ${SOURCE_BRANCH:-local}\n" >> imageInfo.txt
-RUN printf "Source Commit: ${SOURCE_COMMIT:-local}" >> imageInfo.txt
+RUN printf "Source Commit: ${SOURCE_COMMIT:-local}\n" >> imageInfo.txt
 

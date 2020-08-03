@@ -1,6 +1,11 @@
 library(fastqcr)
 
 # get each report 
+comArgs <- commandArgs(TRUE)
+
+base_dir <- comArgs[1]
+temp_dir <- comArgs[2]
+anno_dir <- comArgs[3]
 
 #fastqc
 fastqcDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="_fastqc.html")))
@@ -72,6 +77,7 @@ if(length(r2) >0){
 ####r1df is not either one of both the fastq files 
 
 ###Debarcode 
+if(debarcodeDirExists){
 deb <- read.table(paste(debarcodeDir,"debarcode_stats.txt", sep="/"), fill=T)
 inputReads <- as.numeric(as.character(deb$V3[1]))
 validBcReads <- as.numeric(as.character(deb$V3[2]))
@@ -81,7 +87,7 @@ dBarcode <- data.frame(
 	Metric = c("Input Reads", "Reads with Valid UMI", "% Reads with Valid UMI"),
 	Value = prettyNum(c(inputReads, validBcReads, signif(validBcReads/inputReads, 3) * 100), big.mark = ",", scientific = F),
 	stringsAsFactors = FALSE)
-
+}
 ####trimming 
 trim <- read.table(paste(trimDir, "trimlog.log", sep="/"), skip=7, nrows=7, fill=T, sep=":") 
 names(trim) <- c("Metric","Value")
@@ -104,7 +110,7 @@ colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
 countLong = countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-longRNAcounts <- rbind(,longRNAcounts,data.frame(Result="Genes with >0 reads", Count=dim(countLong[countLong$Count >1,])[1]))
+longRNAcounts <- rbind(longRNAcounts,data.frame(Result="Genes with >0 reads", Count=dim(countLong[countLong$Count >1,])[1]))
 
 ### biotypes w/ threshold 
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
@@ -117,7 +123,7 @@ countsWbiotype = merge(countLong, biotypes[biotypes[,"Gene"] %in% countLong[,"Ge
 
 #enviormental metadata from other reports
 env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","BEDTOOLS_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
-env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
+env <- as.data.frame(env, stringsAsFactors=FALSE)
 umi_tools_version <- system("umi_tools --version", intern=T)
 umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
 env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)

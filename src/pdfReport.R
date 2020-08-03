@@ -196,11 +196,11 @@ p2
 
 #' `r if(debarcodeDirExists) { "# UMI Parsing" }`
 #+ eval=debarcodeDirExists, echo=FALSE, fig.width=8, fig.height=5, fig.align="left"
-
-deb <- read.table(paste(debarcodeDir,"debarcode_stats.txt", sep="/"), fill=T)
-inputReads <- as.numeric(as.character(deb$V3[1]))
-validBcReads <- as.numeric(as.character(deb$V3[2]))
-invalidBcReads <- inputReads-validBcReads
+if(debarcodeDirExists){
+	deb <- read.table(paste(debarcodeDir,"debarcode_stats.txt", sep="/"), fill=T)
+	inputReads <- as.numeric(as.character(deb$V3[1]))
+	validBcReads <- as.numeric(as.character(deb$V3[2]))
+	invalidBcReads <- inputReads-validBcReads
 
 #create data frame
 df <- data.frame(
@@ -221,7 +221,7 @@ pl <- plot_ly(dfx, x = ~valid, y = ~" ", type = "bar", name="Valid", orientation
 
 #create plot
 pl
-
+}
 #' \newpage
 
 #' `r if(trimDirExists) { "# Read Trimming" }`

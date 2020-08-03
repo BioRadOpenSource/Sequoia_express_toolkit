@@ -391,7 +391,7 @@ process assembleReport {
     output:
     file 'htmlReport.html'
     file 'pdfReport.pdf'
-    file 'csvReport.csv'
+    file 'Sequoia_express_report.csv'
     val "$name" into meta_ch
     
     script:
@@ -399,11 +399,12 @@ process assembleReport {
     mkdir -p ./tmp
     cp /opt/biorad/src/htmlReport.R ./tmp/htmlReport.R
     cp /opt/biorad/src/pdfReport.R ./tmp/pdfReport.R
-    cp /opt/biorad/src/csvReport.R ./tmp/csvReport.R
     Rscript /opt/biorad/src/generateRmdReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
     cp ./tmp/htmlReport.html ./
     cp ./tmp/pdfReport.pdf ./
-    cp ./tmp/csvReport.csv ./
+    cp /opt/biorad/src/csvReport.R ./tmp/csvReport.R
+    Rscript ./tmp/csvReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+    cp ./tmp/Sequoia_express_report.csv ./
     """
 }
 process combinedXLS{
