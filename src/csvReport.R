@@ -122,8 +122,8 @@ countsWbiotype = merge(countLong, biotypes[biotypes[,"Gene"] %in% countLong[,"Ge
 
 
 #enviormental metadata from other reports
-env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","BEDTOOLS_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
-env <- as.data.frame(env, stringsAsFactors=FALSE)
+env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+env <- as.data.frame(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"), env, stringsAsFactors=FALSE)
 umi_tools_version <- system("umi_tools --version", intern=T)
 umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
 env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
@@ -140,6 +140,12 @@ isErcc <- any(grepl("ercc", anno_path))
 anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), comment.char="", fill=T, sep=",")
 anno_source <- gsub("#!annotation-source ", "", anno_version$V1[grep("annotation-source", anno_version$V1)])
 localVars <- data.frame(rowname = c("Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
+
+print(env)
+colnames(env) = c("rowname","env")
+print(containerInfo)
+print(localVars)
+print(env)
 env <- rbind(containerInfo, localVars, env)
 env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
 colnames(env) <- NULL
@@ -152,18 +158,20 @@ colnames(env) <- NULL
 
 #combine each to one csv
 sink("Sequoia_express_report.csv")
-load.image("/opt/biorad/src/vendor-logo.png")
+#load.image("/opt/biorad/src/vendor-logo.png")
 cat("\n")
 cat("Fastqc Report\n")
 write.csv(r1df)
 cat("___________________________________")
 cat("\n")
 cat("\n")
+if(debarcodeDirExists){
 cat("Debarcode Report\n")
 write.csv(debarcode)
 cat("___________________________________")
 cat("\n")
 cat("\n")
+}
 cat("Trimming Report\n")
 write.csv(trim)
 cat("___________________________________")

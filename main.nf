@@ -189,6 +189,8 @@ process starAlign {
     set val(name), file("Aligned.sortedByCoord.out.bam*") into umiTagging_ch, picardBam_ch
     file "Log.final.out" into report_star
     file ("Unmapped.out.mate*")
+    val name into meta_names_star
+    file "Log.final.out.*" into meta_star
 
     script:
            """
@@ -210,6 +212,7 @@ process starAlign {
         --outFileNamePrefix ./ > star_log.txt 2>&1
     rm -rf _STARgenome
     sambamba index -t $task.cpus Aligned.sortedByCoord.out.bam
+    cp Log.final.out Log.final.out.$name
     """ 
 }
 
@@ -225,6 +228,8 @@ process picardAlignSummary {
 
     output:
     file 'rna_metrics.txt' into report_picard
+    val name into meta_names_picard
+    file 'rna_metrics.txt.*' into meta_picard
 
     script:
     (bam, bai) = bams
@@ -235,6 +240,7 @@ process picardAlignSummary {
     REF_FLAT=$refFlatFile \
     STRAND=$strand \
     RIBOSOMAL_INTERVALS=$ribosomalIntervalFile
+    cp rna_metrics.txt rna_metrics.txt.$name
     """
 }
 
@@ -380,13 +386,13 @@ process assembleReport {
     val complete from threshold_ch
     val name from repName_ch
     file annoDirPath
-    file(fastqc: "out/fastqc/*") from report_fastqc
-    file("out/debarcode/*") from report_debarcode.ifEmpty([]) // optional
-    file("out/cutAdapt/*") from report_trim
-    file("out/star/*") from report_star 
-    file("out/star/*") from report_picard // Goes into star for reasons
-    file("out/umitools/*") from report_dedup.ifEmpty([]) // optional
-    file("out/counts/*") from report_longRNACounts
+    file(fastqc: "out/fastqc/") from report_fastqc
+    file("out/debarcode/") from report_debarcode.ifEmpty([]) // optional
+    file("out/cutAdapt/") from report_trim
+    file("out/star/") from report_star 
+    file("out/star/") from report_picard // Goes into star for reasons
+    file("out/umitools/") from report_dedup.ifEmpty([]) // optional
+    file("out/counts/") from report_longRNACounts
 
     output:
     file 'htmlReport.html'
@@ -404,12 +410,11 @@ process assembleReport {
     cp ./tmp/pdfReport.pdf ./
     cp /opt/biorad/src/csvReport.R ./tmp/csvReport.R
     Rscript ./tmp/csvReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
-    cp ./tmp/Sequoia_express_report.csv ./
     """
 }
 process combinedXLS{
 	label 'low_memory'
-	tag "coutsAsXls"
+	tag "countsAsXls"
 	publishDir "${params.outDir}/$name/calcRPMKTPM", mode:'copy'
 
 	input:
@@ -432,14 +437,16 @@ process metaReport{
 	// generate a high level summary of batch run
 	
 	input:
-	val x from meta_ch
+	val x from meta_ch 
+	file("out/star/") from meta_star.collect()
+	file("out/picard/") from meta_picard.collect()
 
 	output:
 	file 'batch_summary.csv'
 	
+	script:	
 	"""
-	Rscript /opt/biorad/src/meta_report.R "${params.outDir}"	
-
+	Rscript /opt/biorad/src/meta_report.R \$(readlink -f ./out)
 	"""
 }
 
@@ -450,7 +457,7 @@ def readParamsFromJsonSettings() {
     try {
         paramsWithUsage = tryReadParamsFromJsonSettings()
     } catch (Exception e) {
-        println "Could not rea parameters settings from json. $e"
+        println "Could not read parameters settings from json. $e"
         pramsWithUsage = Collections.emptyMap()
     }
     return paramsWithUsage
