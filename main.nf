@@ -128,7 +128,7 @@ if (!params.skipUmi) {
 
         output:
         set val(sample_id), file('*_R1.fastq.gz') into debarcoded_ch
-        file 'debarcode_stats.txt' into report_debarcode
+        file 'debarcode_stats.txt.*' into report_debarcode
 
         script:
         """
@@ -137,6 +137,7 @@ if (!params.skipUmi) {
             | tee >(awk '/^MM/{bad=bad+1}/^@/{good=good+1}END{print "Total Reads: " good + bad; print "Good Reads: " good; print "Bad Reads: " bad}' > debarcode_stats.txt) \
             | grep -ve '^MM' \
             | bash /opt/biorad/src/tsv_to_fastq.sh ${sample_id}_debarcoded_R1.fastq.gz ${sample_id}_debarcoded_R2.fastq.gz compress
+	cp debarcode_stats.txt debarcode_stats.txt.$sample_id
         """
     }
 } else {
@@ -155,7 +156,7 @@ process cutAdapt {
 
     output:
     set val(name), file( "trimmed_R1.fastq.gz") into trimmed_ch
-    file "trimlog.log" into report_trim
+    file "trimlog.log.*" into report_trim
 
     script:
     read1 = reads[0]
@@ -164,11 +165,13 @@ process cutAdapt {
     cutadapt -u 1 -a "A{10}" -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
              -o trimmed_R1.fastq.gz $read1 1> trimlog.log
+    mv trimlog.log trimlog.log.$name
     """
     } else { // No trimming is done
     """
     cutadapt -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff -o trimmed_R1.fastq.gz $read1 1> trimlog.log
+    mv trimlog.log trimlog.log.$name
     """
     }
 }
@@ -187,10 +190,9 @@ process starAlign {
 
     output:
     set val(name), file("Aligned.sortedByCoord.out.bam*") into umiTagging_ch, picardBam_ch
-    file "Log.final.out" into report_star
     file ("Unmapped.out.mate*")
     val name into meta_names_star
-    file "Log.final.out.*" into meta_star
+    file "Log.final.out.*" into meta_star, report_star
 
     script:
            """
@@ -227,9 +229,8 @@ process picardAlignSummary {
     file ribosomalIntervalFile
 
     output:
-    file 'rna_metrics.txt' into report_picard
     val name into meta_names_picard
-    file 'rna_metrics.txt.*' into meta_picard
+    file 'rna_metrics.txt.*' into meta_picard, report_picard
 
     script:
     (bam, bai) = bams
@@ -281,7 +282,7 @@ if (!params.skipUmi) {
 
         output:
         set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") into BamLong_ch
-        file 'dedup.log' into report_dedup
+        file 'dedup.log.*' into report_dedup
 
         script:
         (bam, bai) = bams
@@ -294,6 +295,7 @@ if (!params.skipUmi) {
         sambamba index -t $task.cpus ./Aligned.sortedByCoord.deduplicated.out.bam
         printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
         printf "unique_output_reads: " >> ./dedup.log; samtools view ./Aligned.sortedByCoord.deduplicated.out.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	cp dedup.log dedup.log.$name
         """
     }
 } else {
@@ -314,7 +316,8 @@ process count_rna {
     
     output:
     val(name) into (counts_name, xls_name, threshold_name)
-    file "gene_counts_longRNA*" into (report_longRNACounts, counts_ch, counts_xls, count_threshold_ch)
+    file "gene_counts_longRNA*" into (counts_ch, counts_xls, count_threshold_ch)
+    file "gene_counts_longRNA.summary.*" into report_longRNACounts
 
     script:
     strand = params.reverseStrand ? "-s 2" : "-s 1"
@@ -324,6 +327,7 @@ process count_rna {
     -a $longRNAgtfFile \
     -o ./gene_counts_longRNA \
     -R BAM $just_bam
+    cp gene_counts_longRNA.summary gene_counts_longRNA.summary.$name
     """
 }
 
@@ -380,25 +384,22 @@ else{
 process assembleReport {
     label 'low_memory'
     tag "assembleReport"
-    publishDir "${params.outDir}/$name/report", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
+    publishDir "${params.outDir}/reports", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
 
     input:
-    val complete from threshold_ch
-    val name from repName_ch
     file annoDirPath
-    file(fastqc: "out/fastqc/") from report_fastqc
-    file("out/debarcode/") from report_debarcode.ifEmpty([]) // optional
-    file("out/cutAdapt/") from report_trim
-    file("out/star/") from report_star 
-    file("out/star/") from report_picard // Goes into star for reasons
-    file("out/umitools/") from report_dedup.ifEmpty([]) // optional
-    file("out/counts/") from report_longRNACounts
+    file(fastqc: "out/fastqc/*") from report_fastqc.collect()
+    file("out/debarcode/*") from report_debarcode.collect().ifEmpty([]) // optional
+    file("out/cutAdapt/*") from report_trim.collect()
+    file("out/star/*") from report_star.collect() 
+    file("out/star/*") from report_picard.collect() // Goes into star for reasons
+    file("out/umitools/*") from report_dedup.collect().ifEmpty([]) // optional
+    file("out/counts/*") from report_longRNACounts.collect()
 
     output:
-    file 'htmlReport.html'
-    file 'pdfReport.pdf'
-    file 'Sequoia_express_report.csv'
-    val "$name" into meta_ch
+    file '*_htmlReport.html'
+    file '*_pdfReport.pdf'
+    file '*_csvreport.csv'
     
     script:
     """
@@ -406,8 +407,8 @@ process assembleReport {
     cp /opt/biorad/src/htmlReport.R ./tmp/htmlReport.R
     cp /opt/biorad/src/pdfReport.R ./tmp/pdfReport.R
     Rscript /opt/biorad/src/generateRmdReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
-    cp ./tmp/htmlReport.html ./
-    cp ./tmp/pdfReport.pdf ./
+    cp ./tmp/*_htmlReport.html ./
+    cp ./tmp/*_pdfReport.pdf ./
     cp /opt/biorad/src/csvReport.R ./tmp/csvReport.R
     Rscript ./tmp/csvReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
     """
@@ -437,7 +438,6 @@ process metaReport{
 	// generate a high level summary of batch run
 	
 	input:
-	val x from meta_ch 
 	file("out/star/") from meta_star.collect()
 	file("out/picard/") from meta_picard.collect()
 
