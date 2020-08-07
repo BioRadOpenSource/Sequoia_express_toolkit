@@ -47,27 +47,27 @@ fastqcDirExists <- length(fastqcDir) == 1
 write(paste("fastqcDirExists: ", fastqcDirExists), stderr())
 
 #debarcoding
-debarcodeDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="debarcode_stats.txt")))
+debarcodeDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="debarcode_stats.txt.*")))
 debarcodeDirExists <- length(debarcodeDir) == 1
 write(paste("debarcodeDirExists: ", debarcodeDirExists), stderr())
 
 #trimming
-trimDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="trimlog.log")))
+trimDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="trimlog.log.*")))
 trimDirExists <- length(trimDir) == 1
 write(paste("trimDirExists: ", trimDirExists), stderr())
 
 #alignments
-alignmentDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="rna_metrics.txt")))
+alignmentDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="rna_metrics.txt.*")))
 alignmentDirExists <- length(alignmentDir) == 1
 write(paste("alignmentDirExists: ", alignmentDirExists), stderr())
 
 #deduplication
-dedupDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="dedup.log")))
+dedupDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="dedup.log.*")))
 dedupDirExists <- length(dedupDir) == 1
 write(paste("dedupDirExists: ", dedupDirExists), stderr())
 
 #counts
-countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="miRNA.summary")))
+countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="LongRNA.summary.*")))
 countsDirExists <- length(countsDir) == 1
 write(paste("countsDirExists: ", countsDirExists), stderr())
 
@@ -82,8 +82,8 @@ parseQcFile <- function(fileName)
 
 qcFiles <- list.files(fastqcDir, full.names=TRUE)[grepl("zip",list.files(fastqcDir))]
 
-r1 <- qcFiles[grepl("_R1_",qcFiles)]
-r2 <- qcFiles[grepl("_R2_",qcFiles)]
+r1 <- qcFiles[grepl(paste0(n,"*_R1_"),qcFiles)]
+r2 <- qcFiles[grepl(paste0(n,"*_R2_"),qcFiles)]
 
 r1Qc <- sapply(r1, parseQcFile, simplify=F)
 
@@ -197,7 +197,7 @@ p2
 #' `r if(debarcodeDirExists) { "# UMI Parsing" }`
 #+ eval=debarcodeDirExists, echo=FALSE, fig.width=8, fig.height=5, fig.align="left"
 if(debarcodeDirExists){
-	deb <- read.table(paste(debarcodeDir,"debarcode_stats.txt", sep="/"), fill=T)
+	deb <- read.table(paste0(debarcodeDir,"/debarcode_stats.txt.",n), fill=T)
 	inputReads <- as.numeric(as.character(deb$V3[1]))
 	validBcReads <- as.numeric(as.character(deb$V3[2]))
 	invalidBcReads <- inputReads-validBcReads
@@ -228,7 +228,7 @@ pl
 #+ eval=trimDirExists, echo=FALSE, fig.asp=0.75, fig.align="center"
 
 #Import metadata from cutadapt and format it
-rt <- read.table(paste(trimDir, "trimlog.log", sep="/"), skip=7, nrows=7, fill=T, sep=":") 
+rt <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, nrows=7, fill=T, sep=":") 
 names(rt) <- c("Metric","Value")
 rt$Value <- as.numeric(gsub(",","",unlist(lapply(strsplit(as.character(rt$Value), split="\\s+"), `[[`, 2)))) #this is gross, i'm sorry for nesting 6 functions
 
@@ -254,8 +254,8 @@ kable(rt, "latex", booktabs = T) %>%
 #+ eval=alignmentDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F
 
 #Using a subset of PICARD outputs
-rt <- read.table(paste(alignmentDir, "rna_metrics.txt", sep="/"), nrows=1, header=T, fill=T)
-starReport <- read.table(paste(alignmentDir, "Log.final.out", sep="/"), sep="|", fill=T)
+rt <- read.table(paste0(alignmentDir, "/rna_metrics.txt.",n), nrows=1, header=T, fill=T)
+starReport <- read.table(paste0(alignmentDir, "/Log.final.out.",n), sep="|", fill=T)
 starReport$V2 <- gsub("\t","",starReport$V2)
 
 #parse out relevant stuff from STAR report
@@ -305,7 +305,7 @@ df$Value <- prettyNum(df$Value, big.mark = ",", scientific = F)
 kable(df, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
-rt_cov <- read.table(paste(alignmentDir, "rna_metrics.txt", sep="/"), skip = 10, header=T, fill=T)
+rt_cov <- read.table(paste0(alignmentDir, "/rna_metrics.txt.",n), skip = 10, header=T, fill=T)
 
 cov <- plot_ly(width = 700) %>% 
   layout(
@@ -336,13 +336,13 @@ pl
 #' `r if(dedupDirExists) { "# Deduplication" }`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
 
-umisObserved <- as.numeric(system(paste('grep -F "#umis"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d' ' -f5"), intern=T))
-inputAlignments <- as.numeric(system(paste('grep "Input Reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d' ' -f7"), intern=T))
-outputAlignments <- as.numeric(system(paste('grep "reads out"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d ' ' -f2"), intern=T))
-uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d ' ' -f2"), intern=T))
+umisObserved <- as.numeric(system(paste('grep -F "#umis"', paste0(dedupDir, "/dedup.log.",n), "| cut -d' ' -f5"), intern=T))
+inputAlignments <- as.numeric(system(paste('grep "Input Reads"', paste0(dedupDir, "/dedup.log.",n), "| cut -d' ' -f7"), intern=T))
+outputAlignments <- as.numeric(system(paste('grep "reads out"', paste0(dedupDir, "/dedup.log.",n), "| cut -d: -f4"), intern=T))
+meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', paste0(dedupDir, "/dedup.log.",n), "| cut -d: -f4"), intern=T))
+maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', paste0(dedupDir, "/dedup.log.",n), "| cut -d: -f4"), intern=T))
+uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', paste0(dedupDir, "/dedup.log.",n), "| cut -d ' ' -f2"), intern=T))
+uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', paste0(dedupDir, "/dedup.log.",n), "| cut -d ' ' -f2"), intern=T))
 
 df <- data.frame("Total input alignments" = inputAlignments,
                  "Total output alignments" = outputAlignments,
@@ -367,20 +367,18 @@ kable(df, "latex", booktabs = T) %>%
 #+ eval=countsDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
 #parse genecounts summary for longRNA
 
-longRNAcounts <- read.table(paste(countsDir, "gene_counts_longRNA.summary", sep="/"), skip=1)
+longRNAcounts <- read.table(paste0(countsDir, "/gene_counts_longRNA.summary.",n), skip=1)
 colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
 
 #handle biotypes
-countLong <- read.table(paste(countsDir, "gene_counts_longRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-countMicro <- read.table(paste(countsDir, "gene_counts_miRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-countMicro$gene_biotype <- "miRNA"
+countLong <- read.table(paste0(countsDir, "gene_counts_longRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
 biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
 
 countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
-countAll <- rbind(countLong, countMicro)
+countAll <- countLong
 countByBiotype <- countAll %>% filter(!is.na(gene_biotype)) %>% group_by(gene_biotype) %>% summarise(count = sum(Count)) %>% arrange(-count)
 countByBiotype$gene_biotype <- factor(countByBiotype$gene_biotype, levels = unique(countByBiotype$gene_biotype)[order(countByBiotype$count, decreasing = TRUE)])
 countByBiotype <- countByBiotype %>% filter(count > 0) #filter biotypes with no counts
