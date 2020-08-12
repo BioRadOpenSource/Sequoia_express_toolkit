@@ -54,7 +54,7 @@ dedupDirExists <- length(dedupDir) == 1
 write(paste("dedupDirExists: ", dedupDirExists), stderr())
 
 #counts
-countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="LongRNA.summary.*")))
+countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="gene_counts_longRNA.summary.*")))
 countsDirExists <- length(countsDir) == 1
 write(paste("countsDirExists: ", countsDirExists), stderr())
 
@@ -462,9 +462,12 @@ countLong <- read.table(paste0(countsDir, "/gene_counts_longRNA.",n), header=T, 
 write("Processing gene_biotypes.tsv", stderr())
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
 biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
-
 countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
 countAll <- countLong
+
+countLong = countLong[,c("Gene","Length","Count","gene_biotype")]
+colnames(countLong) = c("Gene","Length","Count","Biotype")
+
 countByBiotype <- countAll %>% filter(!is.na(gene_biotype)) %>% group_by(gene_biotype) %>% summarise(count = sum(Count)) %>% arrange(-count)
 countByBiotype$gene_biotype <- factor(countByBiotype$gene_biotype, levels = unique(countByBiotype$gene_biotype)[order(countByBiotype$count, decreasing = TRUE)])
 countByBiotype <- countByBiotype %>% filter(count > 0) #filter biotypes with no counts
@@ -485,19 +488,19 @@ countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientif
 #render tables behind pills
 write("Rendering counts information", stderr())
 cat("###", "RNA count summary", "\n")
-kable(countLong, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
+datatable(countLong)
 cat(" \n \n")
 
 cat("###", "RNA count summary apendix", "\n")
-
+datatable(longRNAcounts)
 cat(" \n \n")
 
 cat("###", "Gene Biotypes", "\n")
 #render table
-#kable(countByBiotype, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
-datatable(countByBiotype, class = 'cell-baorder stipe')
+datatable(countByBiotype)
 #render plot
 pl
+
 cat(" \n \n")
 
 #' `r if(TRUE) { "## Pipeline Metadata {.tabset .tabset-fade .tabset-pills}" }`

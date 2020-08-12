@@ -88,6 +88,15 @@ RUN chmod a+x ${DEST_DIR}/sambamba/sambamba
 ENV PATH ${DEST_DIR}/sambamba/:$PATH
 ######### End Sambamba Setup #########
 
+##########Install Pandoc #############
+#ENV PANDOC_VERSION 1.16.0.2
+#RUN mkdir -p ${DEST_DIR}/pandoc
+#RUN curl -SLO https://hackage.haskell.org/package/pandoc-${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}.tar.gz \
+#	&& tar xvzf pandoc-${PANDOC_VERSION}.tar.gz && mv pandoc-${PANDOC_VERSION} ${DEST_DIR}/pandoc/pandoc
+#RUN chmod a+x ${DEST_DIR}/pandoc/pandoc
+#ENV PATH ${DEST_DIR}/pandoc/:$PATH
+#RUN rm pandoc-${PANDOC_VERSION}.tar.gz
+#####################################
 
 ######### Pysam Setup ################
 RUN pip3 install pysam
@@ -105,11 +114,24 @@ RUN pip3 install openpyxl
 ######### R Setup ###############
 RUN apt-get update && apt-get install -y \
     apt-transport-https \
-    pandoc \
     libcurl4-openssl-dev \
+    pandoc \
     libssl-dev \
     libxml2-dev \
     fonts-freefont-ttf 
+#ENV R_VER=3.4.4
+#RUN curl -SLO https://cran.rstudio.com/src/base/R-3/R-${R_VER}.tar.gz
+#RUN tar -xzvf R-${R_VER}.tar.gz
+#RUN mkdir -p ${DEST_DIR}/R
+#RUN mv R-${R_VER}/ ${DEST_DIR}/R/
+#RUN cd ${DEST_DIR}/R/R-${R_VER}/
+#RUN ./configure --with-x=no
+#RUN make
+#RUN make install
+#RUN cd 
+#RUN ln -s ${DEST_DIR}/R/R-${R_VER}/R /usr/local/bin/R
+#RUN ln -s ${DEST_DIR}/R/R-${R_VER}/Rscript /usr/local/bin/Rscript
+
 
 RUN apt-get install -y r-base -q
 RUN Rscript -e 'install.packages("XML", repos = "http://www.omegahat.net/R")'

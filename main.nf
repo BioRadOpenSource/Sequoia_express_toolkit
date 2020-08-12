@@ -77,8 +77,7 @@ log.info "----------------------------------------------------"
 reads = params.reads+"*{R1,R2}*"
 
 Channel
-    //Todo, make this more robust
-    .fromFilePairs( reads, size:-1) //, size: params.skipUmi ? 1 : 2 ) // Assume we always pass in R1 and R2, but if skipumi, only use R1
+    .fromFilePairs( reads, size:-1)
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .set { read_files}
 
@@ -127,7 +126,7 @@ if (!params.skipUmi) {
         set sample_id, file(reads) from raw_reads
 
         output:
-        set val(sample_id), file('*_R1.fastq.gz') into debarcoded_ch
+        set val(sample_id), file('*.fastq.gz') into debarcoded_ch
         file 'debarcode_stats.txt.*' into report_debarcode
 
         script:
@@ -137,7 +136,7 @@ if (!params.skipUmi) {
             | tee >(awk '/^MM/{bad=bad+1}/^@/{good=good+1}END{print "Total Reads: " good + bad; print "Good Reads: " good; print "Bad Reads: " bad}' > debarcode_stats.txt) \
             | grep -ve '^MM' \
             | bash /opt/biorad/src/tsv_to_fastq.sh ${sample_id}_debarcoded_R1.fastq.gz ${sample_id}_debarcoded_R2.fastq.gz compress
-	cp debarcode_stats.txt debarcode_stats.txt.$sample_id
+	mv debarcode_stats.txt debarcode_stats.txt.$sample_id
         """
     }
 } else {
@@ -159,14 +158,30 @@ process cutAdapt {
     file "trimlog.log.*" into report_trim
 
     script:
-    read1 = reads[0]
+   
     if (!params.noTrim) {
+	if(params.seqType == "SE"){
+	read1 = reads
+	//single end with UMI on R1
     """
+    cutadapt -u 1 -m ${params.minBp} -j $task.cpus \
+             -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
+             -o trimmed_R1.fastq.gz $read1 1> trimlog.log
+    mv trimlog.log trimlog.log.$name
+    """
+	}
+	else{
+	//paired end 
+	read1 = reads[0]
+	read2 = reads[1] 
+	"""
     cutadapt -u 1 -a "A{10}" -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
              -o trimmed_R1.fastq.gz $read1 1> trimlog.log
     mv trimlog.log trimlog.log.$name
     """
+
+	}
     } else { // No trimming is done
     """
     cutadapt -m ${params.minBp} -j $task.cpus \
@@ -317,7 +332,7 @@ process count_rna {
     output:
     val(name) into (counts_name, xls_name, threshold_name)
     file "gene_counts_longRNA*" into (counts_ch, counts_xls, count_threshold_ch)
-    file "gene_counts_longRNA.summary.*" into report_longRNACounts
+    file "*.$name" into report_longRNACounts
 
     script:
     strand = params.reverseStrand ? "-s 2" : "-s 1"
@@ -328,6 +343,7 @@ process count_rna {
     -o ./gene_counts_longRNA \
     -R BAM $just_bam
     cp gene_counts_longRNA.summary gene_counts_longRNA.summary.$name
+    cp gene_counts_longRNA gene_counts_longRNA.$name
     """
 }
 
@@ -399,18 +415,18 @@ process assembleReport {
     output:
     file '*_htmlReport.html'
     file '*_pdfReport.pdf'
-    file '*_csvreport.csv'
+    file '*_csvReport.csv'
     
     script:
     """
     mkdir -p ./tmp
     cp /opt/biorad/src/htmlReport.R ./tmp/htmlReport.R
     cp /opt/biorad/src/pdfReport.R ./tmp/pdfReport.R
+    cp /opt/biorad/src/csvReport.R ./tmp/csvReport.R
     Rscript /opt/biorad/src/generateRmdReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
     cp ./tmp/*_htmlReport.html ./
     cp ./tmp/*_pdfReport.pdf ./
-    cp /opt/biorad/src/csvReport.R ./tmp/csvReport.R
-    Rscript ./tmp/csvReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+    cp ./tmp/*_csvReport.csv ./
     """
 }
 process combinedXLS{

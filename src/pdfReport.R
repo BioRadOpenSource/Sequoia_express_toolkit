@@ -67,7 +67,7 @@ dedupDirExists <- length(dedupDir) == 1
 write(paste("dedupDirExists: ", dedupDirExists), stderr())
 
 #counts
-countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="LongRNA.summary.*")))
+countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="gene_counts_longRNA.summary.*")))
 countsDirExists <- length(countsDir) == 1
 write(paste("countsDirExists: ", countsDirExists), stderr())
 
@@ -373,7 +373,7 @@ longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
 
 #handle biotypes
-countLong <- read.table(paste0(countsDir, "gene_counts_longRNA", sep="/"), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
+countLong <- read.table(paste0(countsDir, "/gene_counts_longRNA.",n), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
 biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
 

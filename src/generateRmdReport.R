@@ -10,11 +10,11 @@ anno_dir <- comArgs[3]
 
 names = system("ls ./out/counts/",intern=T ) 
 names = unlist(lapply(names, function(x) unlist(strsplit(x, "\\."))[3]))
+names = names[!is.na(names)]
 
 write(paste("anno_dir: ", anno_dir), stderr())
 
 setwd(temp_dir)
-
 for(n in names){
 	print(n)
 	htmlReport <- paste(temp_dir, "htmlReport.R", sep="/")
@@ -33,14 +33,13 @@ for(n in names){
 	write("Rendering pdf report", stderr())
 	rmarkdown::render(pdfReportRmd)
 	write("pdf report rendered")
-	unlink(htmlReportRmd)
-	unlink(htmlReport)
-	unlink(pdfReportRmd)
-	unlink(pdfReport)
-
+	write("generating CSV report")
+	source("./csvReport.R")
+	write("CSV report complete")
 	#change name of pdf and html reports so nothing is over written
 	system(paste0("mv pdfReport.pdf ",n,"_pdfReport.pdf"))
 	system(paste0("mv htmlReport.html ",n,"_htmlReport.html"))
+	system(paste0("mv csvReport.csv ",n,"_csvReport.csv"))
 }
 unlink(htmlReportRmd)
 unlink(htmlReport)
