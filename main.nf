@@ -160,7 +160,7 @@ process cutAdapt {
     script:
    
 	if (params.seqType == "SE") {
-		read1 = reads
+	read1 = reads
 		//single end with UMI on R1
     	"""
    	 cutadapt -u -1 -m ${params.minBp} -j $task.cpus \
