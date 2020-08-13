@@ -363,7 +363,7 @@ process calcRPMKTPM {
 
     output:
     file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
-    val name into repName_ch, thresh_ch
+    val name into thresh_ch
 
     script:
     """
@@ -380,24 +380,25 @@ if(params.minGeneType != "none"){
                 // take in user specified cutoff and type and generate appropriate report
                 // should also include biotype 
                 input:
+		val name from thresh_ch
 		file ("./out/") from rpkm_threshold_ch 
 		file ("./out/") from count_theshold_ch	
 
                 output:
                 file "Full_count_table.csv"
                 file "Filter_count_table.csv"
-                val "complete" into threshold_ch
+                file "fileter_count_table.csv.$name" into threshold_ch
 
                 script:
                 """
                 cp /opt/boprad/src/threshold_report.R ./tmp/threshold_report.R
                 Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
-                
+		cp Filter_count_table.csv Filter_count_table.csv.$name                
                 """
         }
 }
 else{
-        threshold_ch = Channel.of("Complete")
+        threshold_ch = Channel.empty()
 }
 
 
@@ -415,7 +416,7 @@ process assembleReport {
     file("out/star/*") from report_picard.collect() // Goes into star for reasons
     file("out/umitools/*") from report_dedup.collect().ifEmpty([]) // optional
     file("out/counts/*") from report_longRNACounts.collect()
-
+	
     output:
     file '*_htmlReport.html'
     file '*_pdfReport.pdf'
