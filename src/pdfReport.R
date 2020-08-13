@@ -383,6 +383,7 @@ countByBiotype <- countAll %>% filter(!is.na(gene_biotype)) %>% group_by(gene_bi
 countByBiotype$gene_biotype <- factor(countByBiotype$gene_biotype, levels = unique(countByBiotype$gene_biotype)[order(countByBiotype$count, decreasing = TRUE)])
 countByBiotype <- countByBiotype %>% filter(count > 0) #filter biotypes with no counts
 
+longRNAcounts <- rbind(longRNAcounts,data.frame(Result="Genes with >0 Counts", Count=dim(countLong[countLong$Count >0,])[1]))
 #create plot with labels above bars; plotly handles autoscaling
 pl <- plot_ly(countByBiotype,
               x=~gene_biotype,

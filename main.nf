@@ -375,9 +375,8 @@ if(params.minGeneType != "none"){
                 // take in user specified cutoff and type and generate appropriate report
                 // should also include biotype 
                 input:
-                val name from thresh_ch
-		file gene_rpkm from rpkm_threshold_ch 
-		
+		file ("./out/") from rpkm_threshold_ch 
+		file ("./out/") from count_theshold_ch	
 
                 output:
                 file "Full_count_table.csv"

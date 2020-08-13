@@ -103,7 +103,7 @@ colnames(longRNAcounts) <- c("Result", "Count")
 longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
 longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
 countLong = countLong <- read.table(paste0(countsDir, "/gene_counts_longRNA.",n), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-longRNAcounts <- rbind(longRNAcounts,data.frame(Result="Genes with >0 reads", Count=dim(countLong[countLong$Count >1,])[1]))
+longRNAcounts <- rbind(longRNAcounts,data.frame(Result="Genes with >0 Counts", Count=dim(countLong[countLong$Count >0,])[1]))
 
 ### biotypes w/ threshold 
 biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
@@ -112,11 +112,11 @@ countLong = countLong <- read.table(paste0(countsDir, "/gene_counts_longRNA.",n)
 #counts with biotypes as one table 
 colnames(biotypes)[1] = "Gene"
 countsWbiotype = merge(countLong, biotypes[biotypes[,"Gene"] %in% countLong[,"Gene"],], by = c("Gene"), all=T) 
-
+countsWbiotype = countsWbiotype[countsWbiotype$Count >0,]
 
 #enviormental metadata from other reports
 env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
-env <- as.data.frame(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"), env, stringsAsFactors=FALSE)
+env <- data.frame(rowname=c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"), env, stringsAsFactors=FALSE)
 umi_tools_version <- system("umi_tools --version", intern=T)
 umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
 env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
@@ -134,21 +134,19 @@ anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), co
 anno_source <- gsub("#!annotation-source ", "", anno_version$V1[grep("annotation-source", anno_version$V1)])
 localVars <- data.frame(rowname = c("Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
 
-print(env)
-colnames(env) = c("rowname","env")
 print(containerInfo)
 print(localVars)
 print(env)
 env <- rbind(containerInfo, localVars, env)
 env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
-colnames(env) <- NULL
+print(env)
+
 
 #Show threshold genes (will be gene count folder) 
 
 
 #show threshold with read count filter
-
-
+colnames(env) <- c("Parameter","Value")
 #combine each to one csv
 sink("csvReport.csv")
 #load.image("/opt/biorad/src/vendor-logo.png")
@@ -171,7 +169,7 @@ cat("___________________________________")
 cat("\n")
 cat("\n")
 cat("Alignment Stats\n")
-write.csv(picard)
+write.csv(picard_df)
 cat("___________________________________")
 cat("\n")
 cat("\n")
@@ -191,7 +189,7 @@ cat("___________________________________")
 cat("\n")
 cat("\n")
 cat("Enviorment Metadata\n")
-write.csv(env)
+write.csv(env,row.names=F)
 cat("___________________________________")
 cat("\n")
 cat("\n")

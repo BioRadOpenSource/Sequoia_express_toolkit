@@ -468,6 +468,7 @@ countAll <- countLong
 countLong = countLong[,c("Gene","Length","Count","gene_biotype")]
 colnames(countLong) = c("Gene","Length","Count","Biotype")
 
+longRNAcounts <- rbind(longRNAcounts,data.frame(Result="Genes with >0 Counts", Count=dim(countLong[countLong$Count >0,])[1]))
 countByBiotype <- countAll %>% filter(!is.na(gene_biotype)) %>% group_by(gene_biotype) %>% summarise(count = sum(Count)) %>% arrange(-count)
 countByBiotype$gene_biotype <- factor(countByBiotype$gene_biotype, levels = unique(countByBiotype$gene_biotype)[order(countByBiotype$count, decreasing = TRUE)])
 countByBiotype <- countByBiotype %>% filter(count > 0) #filter biotypes with no counts
@@ -488,16 +489,18 @@ countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientif
 #render tables behind pills
 write("Rendering counts information", stderr())
 cat("###", "RNA count summary", "\n")
+countLong = countLong[countLong$Count >0,]
 datatable(countLong)
 cat(" \n \n")
 
 cat("###", "RNA count summary apendix", "\n")
-datatable(longRNAcounts)
+datatable(longRNAcounts, escape=F, options=list(pageLength=20))
 cat(" \n \n")
 
 cat("###", "Gene Biotypes", "\n")
 #render table
-datatable(countByBiotype)
+colnames(countByBiotype) <- c("Biotype","Count")
+datatable(countByBiotype, options=list(pageLength=20))
 #render plot
 pl
 
