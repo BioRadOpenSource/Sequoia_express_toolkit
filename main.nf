@@ -154,41 +154,33 @@ process cutAdapt {
     set val(name), file(reads) from debarcoded_ch
 
     output:
-    set val(name), file( "trimmed_R1.fastq.gz") into trimmed_ch
+    set val(name), file( "trimmed_*.fastq.gz") into trimmed_ch
     file "trimlog.log.*" into report_trim
 
     script:
    
-    if (!params.noTrim) {
-	if(params.seqType == "SE"){
-	read1 = reads
-	//single end with UMI on R1
-    """
-    cutadapt -u 1 -m ${params.minBp} -j $task.cpus \
+	if (params.seqType == "SE") {
+		read1 = reads
+		//single end with UMI on R1
+    	"""
+   	 cutadapt -u -1 -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
              -o trimmed_R1.fastq.gz $read1 1> trimlog.log
-    mv trimlog.log trimlog.log.$name
-    """
+    	mv trimlog.log trimlog.log.$name
+    	"""
 	}
 	else{
 	//paired end 
 	read1 = reads[0]
 	read2 = reads[1] 
 	"""
-    cutadapt -u 1 -a "A{10}" -m ${params.minBp} -j $task.cpus \
+    	cutadapt -u -1 -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
-             -o trimmed_R1.fastq.gz $read1 1> trimlog.log
-    mv trimlog.log trimlog.log.$name
-    """
+             -o trimmed_R1.fastq.gz -p trimmed_R2.fastq.gz $read1 $read2 1> trimlog.log
+    	mv trimlog.log trimlog.log.$name
+    	"""
 
 	}
-    } else { // No trimming is done
-    """
-    cutadapt -m ${params.minBp} -j $task.cpus \
-             -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff -o trimmed_R1.fastq.gz $read1 1> trimlog.log
-    mv trimlog.log trimlog.log.$name
-    """
-    }
 }
 
 process starAlign {
