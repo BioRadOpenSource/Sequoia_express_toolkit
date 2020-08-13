@@ -124,15 +124,18 @@ if (!params.skipUmi) {
 
         input:
         set sample_id, file(reads) from raw_reads
-
+	umiLoc = params.umiType.toLowerCase()
         output:
         set val(sample_id), file('*.fastq.gz') into debarcoded_ch
         file 'debarcode_stats.txt.*' into report_debarcode
 
         script:
+	if(seqType == "SE"){
+		reads = "$reads $reads"
+	}
         """
         bash /opt/biorad/src/fastq_to_tsv.sh $reads \
-            | parallel --pipe python3 /opt/biorad/src/debarcode.py \
+            | parallel --pipe python3 /opt/biorad/src/debarcode_${umiLoc}.py \
             | tee >(awk '/^MM/{bad=bad+1}/^@/{good=good+1}END{print "Total Reads: " good + bad; print "Good Reads: " good; print "Bad Reads: " bad}' > debarcode_stats.txt) \
             | grep -ve '^MM' \
             | bash /opt/biorad/src/tsv_to_fastq.sh ${sample_id}_debarcoded_R1.fastq.gz ${sample_id}_debarcoded_R2.fastq.gz compress
@@ -158,12 +161,16 @@ process cutAdapt {
     file "trimlog.log.*" into report_trim
 
     script:
-   
+	cutter = "-1"
+
 	if (params.seqType == "SE") {
 	read1 = reads
+		if(!params.skipUmi && params.umiType.toLowerCase() == "b"){
+			cutter = "-9"
+		}
 		//single end with UMI on R1
     	"""
-   	 cutadapt -u -1 -m ${params.minBp} -j $task.cpus \
+   	 cutadapt -u $cutter -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
              -o trimmed_R1.fastq.gz $read1 1> trimlog.log
     	mv trimlog.log trimlog.log.$name
@@ -173,8 +180,14 @@ process cutAdapt {
 	//paired end 
 	read1 = reads[0]
 	read2 = reads[1] 
+	if(!params.skipUmi && params.umiType.toLowerCase() == "b"){
+                        cutter = "-9"
+                }
+	if(!params.skipUmi && params.umiType.toLowerCase() == "c"){
+                        cutter = "-1 -U 8"
+                }
 	"""
-    	cutadapt -u -1 -m ${params.minBp} -j $task.cpus \
+    	cutadapt -u $cutter -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
              -o trimmed_R1.fastq.gz -p trimmed_R2.fastq.gz $read1 $read2 1> trimlog.log
     	mv trimlog.log trimlog.log.$name
