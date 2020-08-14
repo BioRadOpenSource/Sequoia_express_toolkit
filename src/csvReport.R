@@ -102,6 +102,7 @@ starReport$V2 <- gsub("\t","",starReport$V2)
 names(starReport) = c("Metric","Value")
 
 #deduplication
+if(dedupDirExists){
 file_loc = paste0(dedupDir, "/dedup.log.",n)
 umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
 inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7|sed 's/,//g'"), intern=T))
@@ -123,7 +124,7 @@ df <- data.frame("Total input alignments" = inputAlignments,
 df <- as.data.frame(t(df)) %>% rownames_to_column()
 names(df) <- c("Metric", "Value")
 dedup_df= df
-
+}
 ###gene counts
 longRNAcounts <- read.table(paste0(countsDir, "/gene_counts_longRNA.summary.",n), skip=1)
 colnames(longRNAcounts) <- c("Result", "Count")
