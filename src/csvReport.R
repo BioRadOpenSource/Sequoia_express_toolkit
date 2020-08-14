@@ -58,7 +58,7 @@ if(length(r2) >0){
 	r2Qc <- sapply(r2, parseQcFile, simplify=F)
 	r2df = as.data.frame(r2Qc)
 	colnames(r2df) = paste0("R2_",gsub(".*zip.","",colnames(r2df)))
-	if(dim(r1df)[1] > dim(r2df)[1]){
+	if(dim(r1df)[1] >= dim(r2df)[1]){
 		diff = dim(r1df)[1] - dim(r2df)[1]
 		empty = data.frame(matrix(NA,nrow=diff,ncol= 7))
 		colnames(empty) = colnames(r2df) 
@@ -76,7 +76,7 @@ inputReads <- as.numeric(as.character(deb$V3[1]))
 validBcReads <- as.numeric(as.character(deb$V3[2]))
 invalidBcReads <- inputReads-validBcReads
 
-dBarcode <- data.frame(
+debarcode <- data.frame(
 	Metric = c("Input Reads", "Reads with Valid UMI", "% Reads with Valid UMI"),
 	Value = prettyNum(c(inputReads, validBcReads, signif(validBcReads/inputReads, 3) * 100), big.mark = ",", scientific = F),
 	stringsAsFactors = FALSE)
@@ -100,6 +100,29 @@ names(picard_df) = c("Metric", "Value")
 starReport <- read.table(paste0(starDir, "/Log.final.out.",n), sep="|", fill=T)
 starReport$V2 <- gsub("\t","",starReport$V2)
 names(starReport) = c("Metric","Value")
+
+#deduplication
+file_loc = paste0(dedupDir, "/dedup.log.",n)
+umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
+inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7|sed 's/,//g'"), intern=T))
+outputAlignments <- as.numeric(system(paste('grep "reads out"', file_loc, "| cut -d: -f4"), intern=T))
+meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
+uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
+
+df <- data.frame("Total input alignments" = inputAlignments,
+                "Total output alignments" = outputAlignments,
+                "Unique UMIs observed" = umisObserved,   
+     		"Average UMIs per position" = meanUmiPerPos,
+                "Maximum UMIs per position" = maxUmiPerPos,
+                "Unique Input Reads" = uniqInputReads,
+                "Unique Output Reads" = uniqOutputReads,
+	        "% PCR Duplicates" = (1 - (uniqOutputReads / uniqInputReads)) * 100,
+    		check.names= F)
+df <- as.data.frame(t(df)) %>% rownames_to_column()
+names(df) <- c("Metric", "Value")
+dedup_df= df
 
 ###gene counts
 longRNAcounts <- read.table(paste0(countsDir, "/gene_counts_longRNA.summary.",n), skip=1)
@@ -182,6 +205,13 @@ write.csv(starReport)
 cat("___________________________________")
 cat("\n")
 cat("\n")
+if(dedupDirExists){
+cat("Dedpilcation Report\n")
+write.csv(dedup_df)
+cat("___________________________________")
+cat("\n")
+cat("\n")
+}
 cat("Gene Count Summary\n")
 write.csv(longRNAcounts)
 cat("___________________________________")

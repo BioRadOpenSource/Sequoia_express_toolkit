@@ -15,7 +15,7 @@ def main():
         # basically allows an edit distance of 1
         if missing + Counter(barcode).get("N", 0) > 1:
             bad = True
-            barcode = "N" * (end - start)
+            barcode = "N" * (size-1 - size-9)
 
         vals[0] = "@{}_{}".format(barcode, vals[0][1:])
         vals[4] = "@{}_{}".format(barcode, vals[4][1:])

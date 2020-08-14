@@ -385,13 +385,14 @@ cat(" \n \n")
 
 #' `r if(dedupDirExists) { "## Deduplication {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
-umisObserved <- as.numeric(system(paste('grep -F "#umis"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d' ' -f5"), intern=T))
-inputAlignments <- as.numeric(system(paste('grep "Input Reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d' ' -f7"), intern=T))
-outputAlignments <- as.numeric(system(paste('grep "reads out"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d: -f4"), intern=T))
-uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d ' ' -f2"), intern=T))
-uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', paste(dedupDir, "dedup.log", sep="/"), "| cut -d ' ' -f2"), intern=T))
+file_loc = paste0(dedupDir, "/dedup.log.",n)
+umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
+inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7 |sed 's/,//g'"), intern=T))
+outputAlignments <- as.numeric(system(paste('grep "reads out"', file_loc, "| cut -d: -f4"), intern=T))
+meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
+uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 
 df <- data.frame("Total input alignments" = inputAlignments,
                  "Total output alignments" = outputAlignments,
