@@ -82,9 +82,13 @@ dBarcode <- data.frame(
 	stringsAsFactors = FALSE)
 }
 ####trimming 
-trim <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, nrows=7, fill=T, sep=":") 
+trim <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, fill=T, sep=":") 
 names(trim) <- c("Metric","Value")
 trim$Value <- as.numeric(gsub(",","",unlist(lapply(strsplit(as.character(trim$Value), split="\\s+"), `[[`, 2)))) #this is gross, i'm sorry for nesting 6 functions
+trim <- data.frame(" "="Reads",
+	"Reads Input" = trim$Value[grep("Total read.* processed",trim$Metric)],
+	"Reads Too Short" = trim$Value[grep(".* that were too short", trim$Metric)],
+	"Reads Written" = trim$Value[grep(".* written \\(passing filters\\)",trim$Metric)], check.names=FALSE)
 
 ###alignment
 

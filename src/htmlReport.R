@@ -247,15 +247,15 @@ pl
 #+ eval=trimDirExists, echo=FALSE, fig.asp=0.2, fig.align="center"
 
 #Import metadata from cutadapt and format it
-rt <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, nrows=7, fill=T, sep=":") 
+rt <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, fill=T, sep=":") 
 names(rt) <- c("Metric","Value")
 rt$Value <- as.numeric(gsub(",","",unlist(lapply(strsplit(as.character(rt$Value), split="\\s+"), `[[`, 2)))) #this is gross, i'm sorry for nesting 6 functions
 
 #generate table for plotting
 dfx <- data.frame(" "="Reads",
-				  "Reads Input" = rt$Value[rt$Metric=="Total reads processed"],
-				  "Reads Too Short" = rt$Value[rt$Metric=="Reads that were too short"],
-				  "Reads Written" = rt$Value[rt$Metric=="Reads written (passing filters)"], check.names=FALSE)
+	"Reads Input" = rt$Value[grep("Total read.* processed",rt$Metric)],
+	"Reads Too Short" = rt$Value[grep(".* that were too short", rt$Metric)],
+	"Reads Written" = rt$Value[grep(".* written \\(passing filters\\)",rt$Metric)], check.names=FALSE)
 
 pl <- plot_ly(dfx, x = ~`Reads Too Short`, y = ~" ", type = "bar", name = "Reads Too Short", orientation = "h", hoverinfo = "text", text = ~paste("Reads Too Short: ", dfx$`Reads Too Short`)) %>%
 	add_trace(x = ~`Reads Written`, name = "Reads Written", hoverinfo = "text", text = ~paste("Reads Written: ", dfx$`Reads Written`)) %>%
