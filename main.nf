@@ -124,15 +124,17 @@ if (!params.skipUmi) {
 
         input:
         set sample_id, file(reads) from raw_reads
-	umiLoc = params.umiType.toLowerCase()
+
         output:
         set val(sample_id), file('*.fastq.gz') into debarcoded_ch
         file 'debarcode_stats.txt.*' into report_debarcode
 
         script:
-	if(seqType == "SE"){
+	if(params.seqType == "SE"){
 		reads = "$reads $reads"
 	}
+	
+	umiLoc = params.umiType.toLowerCase()
         """
         bash /opt/biorad/src/fastq_to_tsv.sh $reads \
             | parallel --pipe python3 /opt/biorad/src/debarcode_${umiLoc}.py \

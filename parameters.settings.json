@@ -138,12 +138,23 @@
 		{
 			"name": "minGeneType",
 			"label": "Option to define minium threshold type for genes are reported",
-			"usage": "Provide integer value to cutt off how many reads are minimum",
+			"usage": "Provide metric to be used",
 			"type": "string",
 			"renderer": "check-box",
 			"defualt_value": "none", 
 			"group": "advanced",
 			"choices": ["none","reads","RPKM","TPM"]
+
+		},
+		{
+			"name": "seqType",
+			"label": "Option to define type of sequencing used (Paired vs Single end)",
+			"usage": "Provide sequecing method used",
+			"type": "string",
+			"renderer": "check-box",
+			"defualt_value": "PE", 
+			"group": "advanced",
+			"choices": ["SE","PE"]
 
 		},
 		{
