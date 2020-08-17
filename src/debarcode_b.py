@@ -3,19 +3,21 @@ from collections import Counter
 
 
 def main():
-    #start, end = 0, 8
+    start, end = 0, 8
     for line in fileinput.input():
         bad = False
         vals = line.rstrip("\n").split("\t")
-        size = len(vals[1])
-        barcode = vals[1][size-9:size-1]
+       # size = len(vals[1])
+       # barcode = vals[1][size-9:size-1]
+        barcode = vals[1][start:end]
         barcode_len = len(barcode)
         missing = 8 - barcode_len
         # If the length - number of N's is less than 7, throw it out
         # basically allows an edit distance of 1
         if missing + Counter(barcode).get("N", 0) > 1:
             bad = True
-            barcode = "N" * (size-1 - size-9)
+            #barcode = "N" * (size-1 - size-9)
+            barcode = "N" * (end - start)
 
         vals[0] = "@{}_{}".format(barcode, vals[0][1:])
         vals[4] = "@{}_{}".format(barcode, vals[4][1:])

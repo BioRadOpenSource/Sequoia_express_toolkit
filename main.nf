@@ -168,7 +168,7 @@ process cutAdapt {
 	if (params.seqType == "SE") {
 	read1 = reads
 		if(!params.skipUmi && params.umiType.toLowerCase() == "b"){
-			cutter = "-9"
+			cutter = "9"
 		}
 		//single end with UMI on R1
     	"""
@@ -183,10 +183,10 @@ process cutAdapt {
 	read1 = reads[0]
 	read2 = reads[1] 
 	if(!params.skipUmi && params.umiType.toLowerCase() == "b"){
-                        cutter = "-9"
+                        cutter = "9"
                 }
 	if(!params.skipUmi && params.umiType.toLowerCase() == "c"){
-                        cutter = "-1 -U 8"
+                        cutter = "1 -U 8"
                 }
 	"""
     	cutadapt -u $cutter -m ${params.minBp} -j $task.cpus \
