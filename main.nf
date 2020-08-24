@@ -164,7 +164,7 @@ process cutAdapt {
 
     script:
 	cutter = "-u 1"
-	if(param.noTrim){
+	if(params.noTrim){
 		cutter = ""
 	}
 

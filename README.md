@@ -10,6 +10,31 @@ Nextlfow is the primary software the runs and coodinates the pipeline (groovy / 
 ### Running the pipeline 
 For the majority of users there are only some basic commands that will need to be done but for a full list of options please see the nextflow.config file, using `nextflow run main.nf --help` will only lis the basic options at the moment enough to get a basic run started. 
 
+#### Generate the docker image needed for the virtual enviorment
+This pipeline uses a docker conainer as a virtual enviorment to run the software as OS agnostic as possible. So outside of intsalling docker and nextflow no other software is required. To use this docker container one can simply build it from the included docker file. 
+
+```
+Docker build -t bioraddbg/sequoia-express [path to Dockerfile]
+
+```
+Alernatively this docker file will also be created and pushed after finalization to dockerhub, where it can be pulled directly with no extra fuss.
+
+```
+Docker pull -t bioraddbg/sequoia-express:latest
+```
+
+#### Running the pipeline for analysis with nextflow 
+For basic options
+```
+nextflow run repos/Sequoia_express_toolkit/main.nf --help
+```
+
+For a full run something like this will be your system call
+```
+nextflow run repos/Sequoia\_express\_toolkit/main.nf  --outDir ./output/express --reads ./data/ --genome hg38 --genomes\_base ./genome/ --max\_cpus 16 --max\_memory 60 -with-docker bioraddbg/sequoia-express:latest -resume --seqType="PE"
+
+```
+
 ### Basic updates
 This pipeline has been set up with bulk runs in mind, meaning that the predecessor Sequoia Complete took one file at time while this pipeline takes a whole directory of files at the same time. 
 With this however your fastq files must have at a minium R1 / R2 in the file name to specify that they are reads
