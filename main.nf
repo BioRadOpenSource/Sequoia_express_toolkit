@@ -163,16 +163,19 @@ process cutAdapt {
     file "trimlog.log.*" into report_trim
 
     script:
-	cutter = "-1"
+	cutter = "-u 1"
+	if(param.noTrim){
+		cutter = ""
+	}
 
 	if (params.seqType == "SE") {
 	read1 = reads
-		if(!params.skipUmi && params.umiType.toLowerCase() == "b"){
-			cutter = "9"
+		if(!params.skipUmi && params.umiType.toLowerCase() == "b" && !params.noTrim){
+			cutter = "-u 9"
 		}
 		//single end with UMI on R1
     	"""
-   	 cutadapt -u $cutter -m ${params.minBp} -j $task.cpus \
+   	 cutadapt $cutter -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
              -o trimmed_R1.fastq.gz $read1 1> trimlog.log
     	mv trimlog.log trimlog.log.$name
@@ -182,14 +185,14 @@ process cutAdapt {
 	//paired end 
 	read1 = reads[0]
 	read2 = reads[1] 
-	if(!params.skipUmi && params.umiType.toLowerCase() == "b"){
-                        cutter = "9"
+	if(!params.skipUmi && params.umiType.toLowerCase() == "b" && !params.noTrim){
+                        cutter = "-u 9"
                 }
-	if(!params.skipUmi && params.umiType.toLowerCase() == "c"){
-                        cutter = "1 -U 8"
+	if(!params.skipUmi && params.umiType.toLowerCase() == "c" && !params.noTrim){
+                        cutter = "-u 1 -U 8"
                 }
 	"""
-    	cutadapt -u $cutter -m ${params.minBp} -j $task.cpus \
+    	cutadapt $cutter -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
              -o trimmed_R1.fastq.gz -p trimmed_R2.fastq.gz $read1 $read2 1> trimlog.log
     	mv trimlog.log trimlog.log.$name
