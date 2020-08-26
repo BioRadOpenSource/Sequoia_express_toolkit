@@ -82,8 +82,8 @@ parseQcFile <- function(fileName)
 
 qcFiles <- list.files(fastqcDir, full.names=TRUE)[grepl("zip",list.files(fastqcDir))]
 
-r1 <- qcFiles[grepl(paste0(n,"*_R1_"),qcFiles)]
-r2 <- qcFiles[grepl(paste0(n,"*_R2_"),qcFiles)]
+r1 <- qcFiles[grepl(paste0(n,"_R1_"),qcFiles)]
+r2 <- qcFiles[grepl(paste0(n,"_R2_"),qcFiles)]
 
 r1Qc <- sapply(r1, parseQcFile, simplify=F)
 
