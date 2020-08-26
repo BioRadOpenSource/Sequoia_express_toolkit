@@ -170,7 +170,7 @@ process cutAdapt {
 
 	if (params.seqType == "SE") {
 	read1 = reads
-		if(!params.skipUmi && params.umiType.toLowerCase() == "b" && !params.noTrim){
+		if(params.umiType.toLowerCase() == "b" && !params.noTrim){
 			cutter = "-u 9"
 		}
 		//single end with UMI on R1
@@ -185,10 +185,10 @@ process cutAdapt {
 	//paired end 
 	read1 = reads[0]
 	read2 = reads[1] 
-	if(!params.skipUmi && params.umiType.toLowerCase() == "b" && !params.noTrim){
+	if(params.umiType.toLowerCase() == "b" && !params.noTrim){
                         cutter = "-u 9"
                 }
-	if(!params.skipUmi && params.umiType.toLowerCase() == "c" && !params.noTrim){
+	if(params.umiType.toLowerCase() == "c" && !params.noTrim){
                         cutter = "-u 1 -U 8"
                 }
 	"""
