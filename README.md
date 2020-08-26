@@ -31,13 +31,16 @@ nextflow run repos/Sequoia_express_toolkit/main.nf --help
 
 For a full run something like this will be your system call
 ```
-nextflow run repos/Sequoia\_express\_toolkit/main.nf  --outDir ./output/express --reads ./data/ --genome hg38 --genomes\_base ./genome/ --max\_cpus 16 --max\_memory 60 -with-docker bioraddbg/sequoia-express:latest -resume --seqType="PE"
+nextflow run repos/Sequoia_express_toolkit/main.nf  --outDir ./output/express --reads ./data/ --genome hg38 --genomes_base ./genome/ --max_cpus 16 --max_memory 60 -with-docker bioraddbg/sequoia-express:latest -resume --seqType="PE"
 
 ```
 
 ### Basic updates
 This pipeline has been set up with bulk runs in mind, meaning that the predecessor Sequoia Complete took one file at time while this pipeline takes a whole directory of files at the same time. 
 With this however your fastq files must have at a minium R1 / R2 in the file name to specify that they are reads
+
+### Expected Outputs
+This pipeline creates output similar to those used for Sequoia Complete, each individual sample will have a report in csv, html and pdf format for ease of viewing. Additionally each batch that is run will have its own high level report that is created to have a side by side comparision of metrics as well.
 
 ## Support
 If you encounter and error / bug / issue please contact support@bio-rad.com to let us know or let us know via github so that we can address it. 

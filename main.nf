@@ -469,10 +469,16 @@ process metaReport{
 
 	output:
 	file 'batch_summary.csv'
-	
+	file 'batch_summary.html'
+	file 'batch_summary.pdf'
 	script:	
 	"""
-	Rscript /opt/biorad/src/meta_report.R \$(readlink -f ./out)
+	mkdir -p tmp/
+	cp /opt/biorad/src/batch_html.R ./tmp/batch_html.R
+	cp /opt/biorad/src/batch_pdf.R ./tmp/batch_pdf.R
+	Rscript /opt/biorad/src/meta_report.R \$(readlink -f ./out) \$(readlink -f ./tmp)
+	cp ./tmp/batch_html.html ./batch_summary.html
+	cp ./tmp/batch_pdf.pdf ./batch_summary.pdf
 	"""
 }
 

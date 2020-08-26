@@ -1,3 +1,5 @@
+library(knitr)
+library(rmarkdown)
 #get dir from command line arg
 
 args = commandArgs(trailingOnly=T)
@@ -41,3 +43,17 @@ colnames(report_frame) = c("Metric", star_names)
 meta_report = rbind(align_frame, report_frame)
 
 write.table(meta_report, "batch_summary.csv", sep=",", row.names=F)
+
+temp_dir = "./tmp"
+
+#generate HTML version to rmd
+html_batch = paste(temp_dir, "batch_html.R", sep="/")
+htmlRmd =paste(temp_dir, "batch_html.Rmd", sep="/")
+spin(html_batch, knit=F)
+rmarkdown::render(htmlRmd)
+
+#gnerate pdf version 
+pdf_batch = paste(temp_dir, "batch_pdf.R", sep="/")
+pdfRmd =paste(temp_dir, "batch_pdf.Rmd", sep="/")
+spin(pdf_batch, knit=F)
+rmarkdown::render(pdfRmd)
