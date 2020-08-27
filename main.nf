@@ -307,7 +307,7 @@ if (!params.skipUmi) {
 
         output:
         set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") into BamLong_ch
-        file 'dedup.log.*' into report_dedup
+        file 'dedup.log.*' into report_dedup, meta_dedup
 
         script:
         (bam, bai) = bams
@@ -326,6 +326,7 @@ if (!params.skipUmi) {
 } else {
     umiTagging_ch.into { BamLong_ch} 
     report_dedup = Channel.empty()
+    meta_dedup = Channel.empty()
 }
 
 
@@ -466,6 +467,7 @@ process metaReport{
 	input:
 	file("out/star/") from meta_star.collect()
 	file("out/picard/") from meta_picard.collect()
+	file("out/dedup/") from meta_dedup.collect().ifEmpty([])
 
 	output:
 	file 'batch_summary.csv'

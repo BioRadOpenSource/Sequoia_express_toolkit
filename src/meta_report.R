@@ -39,10 +39,66 @@ for(i in 1:length(reports)){
 }
 colnames(report_frame) = c("Metric", star_names)
 
+#deduplication
+dedupDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="dedup.log.*")))
+dedupDirExists <- length(dedupDir) == 1
+write(paste("dedupDirExists: ", dedupDirExists), stderr())
+if(dedupDirExists){
+files = list.files(dedupDir)
+dedup_frame = data.frame(Metrics=c("Total input alignments",
+				   "Total output alignments",
+				   "Unique UMIs observed",
+				   "Average UMIs per position",
+				   "Maximum UMIs per position",
+				   "Unique Input Reads",
+				   "Unique Output Reads",
+				   "% PCR Duplicates"
+				)
+for( f in files){
+	file_loc = paste0(dedupDir,"/",f)
+	umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
+	inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7|sed 's/,//g'"), intern=T))
+	outputAlignments <- as.numeric(system(paste('grep "reads out"', file_loc, "| cut -d: -f4"), intern=T))
+	meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+	maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+	uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
+	uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
+	pcr_dup = (1 - (uniqOutputReads / uniqInputReads)) * 100
+	df = data.frame(Results=c(
+			inputAlignments,
+			outputAlignments,
+			umisObserved,
+			meanUmiPerPos,
+			maxUmiPerPos,
+			uniqInputReads,
+			uniqOutputReads,
+			pcr_dup,) check.names=F)
+	colnames(df) = unlist(strsplit(f))[3]
 
-meta_report = rbind(align_frame, report_frame)
+	dedup_frame = cbind(dedup_frame,df)
+}
 
-write.table(meta_report, "batch_summary.csv", sep=",", row.names=F)
+
+sink("batch_summary.csv")
+cat("\n")
+cat("Alignment Stats\n")
+write.csv(align_frame)
+cat("___________________________________")
+cat("\n")
+cat("\n")
+cat("Alignement Report\n")
+write.csv(report_frame)
+cat("___________________________________")
+cat("\n")
+cat("\n")
+if(dedupDirExists){
+cat("Dedupilcation Report\n")
+write.csv(dedup_frame)
+cat("___________________________________")
+cat("\n")
+cat("\n")
+}
+sink()
 
 temp_dir = "./tmp"
 

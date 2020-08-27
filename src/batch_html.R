@@ -49,6 +49,13 @@ kableStyle <- c("striped", "condensed", "hover", "responsive")
 #' }
 #' </style>
 
-#' `r {"# Summary Report Table {.tabset .tabset-fade .tabset-pills}"}`
-datatable(meta_report, rownames=F, options=list(pageLength=20)) 
+#' `r {"# Summary Alignement Stats {.tabset .tabset-fade .tabset-pills}"}`
+datatable(align_frame, rownames=F, options=list(pageLength=20)) 
+
+#' `r {"# Summary Alignement Report {.tabset .tabset-fade .tabset-pills}"}`
+datatable(report_frame, rownames=F, options=list(pageLength=20))
+
+#' `r if(dedupDirExists) {"# Summary Deduplicationt Statstistics {.tabset .tabset-fade .tabset-pills}"}`
+#+ eval=dedupDirExists echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
+datatable(dedup_frame, rownames=F, options=list(pageLength=20))
 

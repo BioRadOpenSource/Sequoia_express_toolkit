@@ -207,7 +207,7 @@ cat("___________________________________")
 cat("\n")
 cat("\n")
 if(dedupDirExists){
-cat("Dedpilcation Report\n")
+cat("Dedupilcation Report\n")
 write.csv(dedup_df)
 cat("___________________________________")
 cat("\n")
