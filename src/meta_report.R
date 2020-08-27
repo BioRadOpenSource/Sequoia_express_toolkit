@@ -40,7 +40,7 @@ for(i in 1:length(reports)){
 colnames(report_frame) = c("Metric", star_names)
 
 #deduplication
-dedupDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="dedup.log.*")))
+dedupDir <- unique(dirname(list.files(outPath, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="dedup.log.*")))
 dedupDirExists <- length(dedupDir) == 1
 write(paste("dedupDirExists: ", dedupDirExists), stderr())
 if(dedupDirExists){
@@ -55,6 +55,7 @@ dedup_frame = data.frame(Metrics=c("Total input alignments",
 				   "% PCR Duplicates"
 				))
 for( f in files){
+	write(paste0("working on reading file ",f), stderr())
 	file_loc = paste0(dedupDir,"/",f)
 	umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
 	inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7|sed 's/,//g'"), intern=T))
@@ -77,8 +78,9 @@ for( f in files){
 
 	dedup_frame = cbind(dedup_frame,df)
 }
+}
 
-
+write("Dataframes complete generating CSV",stderr())
 sink("batch_summary.csv")
 cat("\n")
 cat("Alignment Stats\n")
@@ -101,13 +103,13 @@ cat("\n")
 sink()
 
 temp_dir = "./tmp"
-
+write("CSV complete generating HTML", stderr())
 #generate HTML version to rmd
 html_batch = paste(temp_dir, "batch_html.R", sep="/")
 htmlRmd =paste(temp_dir, "batch_html.Rmd", sep="/")
 spin(html_batch, knit=F)
 rmarkdown::render(htmlRmd)
-
+write("HTML complete generating pdf")
 #gnerate pdf version 
 pdf_batch = paste(temp_dir, "batch_pdf.R", sep="/")
 pdfRmd =paste(temp_dir, "batch_pdf.Rmd", sep="/")

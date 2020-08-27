@@ -56,6 +56,6 @@ datatable(align_frame, rownames=F, options=list(pageLength=20))
 datatable(report_frame, rownames=F, options=list(pageLength=20))
 
 #' `r if(dedupDirExists) {"# Summary Deduplicationt Statstistics {.tabset .tabset-fade .tabset-pills}"}`
-#+ eval=dedupDirExists echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
+#+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
 datatable(dedup_frame, rownames=F, options=list(pageLength=20))
 
