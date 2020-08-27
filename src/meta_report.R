@@ -53,7 +53,7 @@ dedup_frame = data.frame(Metrics=c("Total input alignments",
 				   "Unique Input Reads",
 				   "Unique Output Reads",
 				   "% PCR Duplicates"
-				)
+				))
 for( f in files){
 	file_loc = paste0(dedupDir,"/",f)
 	umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
@@ -72,8 +72,8 @@ for( f in files){
 			maxUmiPerPos,
 			uniqInputReads,
 			uniqOutputReads,
-			pcr_dup,) check.names=F)
-	colnames(df) = unlist(strsplit(f))[3]
+			pcr_dup), check.names=F)
+	colnames(df) = unlist(strsplit(f,"\\."))[3]
 
 	dedup_frame = cbind(dedup_frame,df)
 }
