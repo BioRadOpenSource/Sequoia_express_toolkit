@@ -34,7 +34,6 @@ trim <- data.frame(" "="Reads",
 ###alignment
 #Show threshold genes (will be gene count folder) 
 
-
 #show threshold with read count filter
 colnames(env) <- c("Parameter","Value")
 #combine each to one csv

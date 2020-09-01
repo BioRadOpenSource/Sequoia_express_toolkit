@@ -17,16 +17,24 @@ write(paste("logDirExists: ", starDirExists), stderr())
 
 files = list.files(alignmentDir)
 metrics = lapply(files, function(x) read.table(paste0(alignmentDir,"/",x), header=T, nrows=1,fill=T))
-metrics = lapply(metrics, function(x) data.frame(names(x), as.character(x[1,])))
+for(l in 1:length(metrics)){
+	m = metrics[[l]]
+	m[grep("PCT", names(m))]<- paste0((m[grep("PCT", names(m))]*100),"%")
+	metrics[[l]] = m
+}
+
+
+metrics = lapply(metrics, function(x) data.frame(names(x), as.character(x[1,]), stringsAsFactors=F))
 sample_names = gsub("rna_metrics.txt.","",files)
 print(metrics)
 Metric = metrics[[1]][,1]
 #rename cols of each dataframe
-align_frame = data.frame(Metric)
+align_frame = data.frame(Metric, stringsAsFactors=F)
 for(i in 1:length(metrics)){
 	align_frame = cbind(align_frame, metrics[[i]][,2])
 }
 colnames(align_frame) = c("Metric", sample_names)
+
 
 files = list.files(starDir)
 star_names = gsub("Log.final.out.","",files)
@@ -64,7 +72,7 @@ for( f in files){
 	maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
 	uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 	uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
-	pcr_dup = (1 - (uniqOutputReads / uniqInputReads)) * 100
+	pcr_dup = round(((1 - (uniqOutputReads / uniqInputReads)) * 100),digits=-2)
 	df = data.frame(Results=c(
 			inputAlignments,
 			outputAlignments,

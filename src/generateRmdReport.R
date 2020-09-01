@@ -155,7 +155,7 @@ for(n in names){
 		countLong <- read.table(paste0(countsDir, "/gene_counts_longRNA.",n), header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 		write("Processing gene_biotypes.tsv", stderr())
 		biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
-		if("rRNA" %in% biotypes["gene_biotype"]){
+		if("rRNA" %in% biotypes[,"gene_biotype"]){
 		biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
 		}
 		countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))

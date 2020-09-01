@@ -181,7 +181,7 @@ df <- data.frame(
   Value = c(inputReads, validBcReads, signif(validBcReads/inputReads, 3) * 100),
   stringsAsFactors = FALSE
 )
-
+noHtml = deb_df
 #add popovers
 deb_df$`Value` <- cell_spec(
   prettyNum(deb_df$Value, big.mark=",", scientific=FALSE),
@@ -206,7 +206,7 @@ pl <- plot_ly(dfx, x = ~valid, y = ~" ", type = "bar", name="Valid", orientation
 #create plot
 pl
 
-
+deb_df = noHtml
 #' `r if(trimDirExists) { "## Read Trimming" }`
 #+ eval=trimDirExists, echo=FALSE, fig.asp=0.2, fig.align="center"
 
@@ -219,7 +219,7 @@ dfx <- data.frame(" "="Reads",
 pl <- plot_ly(dfx, x = ~`Reads Too Short`, y = ~" ", type = "bar", name = "Reads Too Short", orientation = "h", hoverinfo = "text", text = ~paste("Reads Too Short: ", dfx$`Reads Too Short`)) %>%
 	add_trace(x = ~`Reads Written`, name = "Reads Written", hoverinfo = "text", text = ~paste("Reads Written: ", dfx$`Reads Written`)) %>%
 	layout(barmode = "stack", xaxis = list(title = "Reads"), yaxis = list(title = ""))
-
+noHtml = rt
 #format data table
 rt$`Value` <- cell_spec(
 	prettyNum(rt$Value, big.mark = ",", scientific=FALSE),
@@ -238,6 +238,7 @@ rt$`Value` <- cell_spec(
 
 #write table
 kable(rt, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
+rt = noHtml
 
 #' `r if(alignmentDirExists) { "## Alignment {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=alignmentDirExists, echo=FALSE, fig.asp=0.5, fig.align="center", message=F, results="asis"
@@ -256,6 +257,7 @@ pl <- plot_ly(dfx, x = ~`Coding`, y= ~" ", type = "bar", name="Coding", orientat
   add_trace(x = ~`Ribosomal`, name = "Ribosomal", hoverinfo = 'text', text = ~paste("Ribosomal: ", round(dfx$`Ribosomal`))) %>%
   layout(barmode = 'stack', xaxis = list(title = "Aligned Bases"), yaxis = list(title = ""))
 
+noHtml = align_df
 align_df$`Value` <- cell_spec(
   prettyNum(align_df$Value, big.mark=",", scientific=FALSE),
   popover = spec_popover(
@@ -308,9 +310,13 @@ cat(" \n \n")
 cat("###", "Base Distribution", "\n")
 pl
 cat(" \n \n")
+align_df = noHtml
+
 
 #' `r if(dedupDirExists) { "## Deduplication {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
+noHtml=dedup_df 
+
 dedup_df$`Value` <- cell_spec(
   prettyNum(dedup_df$Value, big.mark=",", scientific=FALSE),
   popover = spec_popover(
@@ -329,13 +335,13 @@ dedup_df$`Value` <- cell_spec(
 
 dedup_df$Value <- prettyNum(dedup_df$Value, big.mark = ",", scientific=FALSE)
 kable(dedup_df, escape = FALSE) %>% kable_styling(bootstrap_options = kableStyle)
-
+dedup_df = noHtml
 
 #' `r if(countsDirExists) { "## Transcriptome {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=countsDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
 
 #parse genecounts summary for longRNA
-
+noHtml = longRNAcounts
 longRNAcounts$`Count` <- cell_spec(
   prettyNum(longRNAcounts$`Count`, big.mark=",", scientific=FALSE),
   popover = spec_popover(
@@ -389,6 +395,7 @@ datatable(countByBiotype, options=list(pageLength=20), rownames=F)
 pl
 
 cat(" \n \n")
+longRNAcounts = noHtml
 
 #' `r if(TRUE) { "## Pipeline Metadata {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
