@@ -267,21 +267,22 @@ kable(dedup_df, "latex", booktabs = T) %>%
 #create plot with labels above bars; plotly handles autoscaling
 
 write("Plotting counts information", stderr())
+#countByBiotype$Biotype <- factor(countByBiotype$Biotype, levels = unique(countByBiotype$Biotype)[order(countByBiotype$Count, decreasing = TRUE)]) 
+
 pl <- plot_ly(countByBiotype,
 	      x=~Biotype,
-	      y=~Count,
-	      text=~prettyNum(count, big.mark = ",", scientific=FALSE),
+	      y=~as.numeric(gsub(",","",Count)),
+	      text=~prettyNum(Count, big.mark = ",", scientific=FALSE),
 	      textposition='outside',
 	      type='bar')
-
-pl <- plot_ly(countByBiotype, x=~Biotype, y=~Count, type='bar')
+plot_by_biotype = countByBiotype
+plot_by_biotype$Count = as.numeric(gsub(",","",plot_by_biotype$Count))
+pl <- plot_ly(plot_by_biotype, x=~Biotype, y=~Count, type='bar')
 
 #countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientific=FALSE)
 
-
-
-
 #render tables and plots on separate pages
+
 #' `r if(exists("longRNAcounts")) { "## longRNA Counts" }`
 #+ eval=exists("longRNAcounts"), echo=FALSE, fig.asp=1, fig.align="center", message=F
 kable(longRNAcounts, "latex", booktabs = T) %>%

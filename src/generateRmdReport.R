@@ -197,6 +197,9 @@ for(n in names){
 	env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
 	colnames(env) <- NULL
 
+	#placeholder for biotype plot
+	biotype_pl = NULL
+	
 	#Breaker ------
 	htmlReport <- paste(temp_dir, "htmlReport.R", sep="/")
 	pdfReport <- paste(temp_dir, "pdfReport.R", sep="/")

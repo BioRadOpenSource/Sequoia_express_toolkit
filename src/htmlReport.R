@@ -365,14 +365,14 @@ longRNAcounts$`Count` <- cell_spec(
 
 #create plot with labels above bars; plotly handles autoscaling
 write("Plotting counts information", stderr())
-pl <- plot_ly(countByBiotype,
+biotype_pl <- plot_ly(countByBiotype,
               x=~gene_biotype,
               y=~count,
               text=~prettyNum(count, big.mark = ",", scientific=FALSE),
               textposition='outside',
               type='bar')
 
-pl <- plot_ly(countByBiotype, x=~gene_biotype, y=~count, type='bar')
+biotype_pl <- plot_ly(countByBiotype, x=~gene_biotype, y=~count, type='bar')
 
 countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientific=FALSE)
 
@@ -392,7 +392,7 @@ cat("###", "Gene Biotypes", "\n")
 colnames(countByBiotype) <- c("Biotype","Count")
 datatable(countByBiotype, options=list(pageLength=20), rownames=F)
 #render plot
-pl
+biotype_pl
 
 cat(" \n \n")
 longRNAcounts = noHtml
