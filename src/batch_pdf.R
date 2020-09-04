@@ -40,9 +40,20 @@ options(warn=-1)
 #setwd("/")
 #dictate kable styling options
 kableStyle <- c("striped", "condensed", "hover", "responsive")
-#' `r {"# Summary Report Table"}`
+#' `r {"# Summary Alignement Statistics"}`
 #+ echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
-kable(meta_report,  "latex", booktabs = T) %>% 
+kable(align_frame,  "latex", booktabs = T) %>% 
 	kable_styling(latex_options = c("striped", "hold_position"))
 
 #' \newpage
+#' `r {"# Summary Alignement Report"}`
+#+ echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
+kable(report_frame,  "latex", booktabs = T) %>%
+	kable_styling(latex_options = c("striped", "hold_position"))
+
+#' \newpage
+#' `r if(dedupDirExists) {"# Summary Alignement Report"}`
+#+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
+kable(dedup_frame,  "latex", booktabs = T) %>% 
+	kable_styling(latex_options = c("striped", "hold_position"))
+

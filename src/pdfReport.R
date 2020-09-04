@@ -41,44 +41,9 @@ options(warn=-1)
 #dictate kable styling options
 kableStyle <- c("striped", "condensed", "hover", "responsive")
 
-#fastqc
-fastqcDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="_fastqc.html")))
-fastqcDirExists <- length(fastqcDir) == 1
-write(paste("fastqcDirExists: ", fastqcDirExists), stderr())
-
-#debarcoding
-debarcodeDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="debarcode_stats.txt.*")))
-debarcodeDirExists <- length(debarcodeDir) == 1
-write(paste("debarcodeDirExists: ", debarcodeDirExists), stderr())
-
-#trimming
-trimDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="trimlog.log.*")))
-trimDirExists <- length(trimDir) == 1
-write(paste("trimDirExists: ", trimDirExists), stderr())
-
-#alignments
-alignmentDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="rna_metrics.txt.*")))
-alignmentDirExists <- length(alignmentDir) == 1
-write(paste("alignmentDirExists: ", alignmentDirExists), stderr())
-
-#deduplication
-dedupDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="dedup.log.*")))
-dedupDirExists <- length(dedupDir) == 1
-write(paste("dedupDirExists: ", dedupDirExists), stderr())
-
-#counts
-countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="gene_counts_longRNA.summary.*")))
-countsDirExists <- length(countsDir) == 1
-write(paste("countsDirExists: ", countsDirExists), stderr())
 
 #' `r if(fastqcDirExists) { "# Read QC" }`
 #+ eval=fastqcDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F
-
-parseQcFile <- function(fileName)
-{
-  qc <- qc_read(fileName, modules="Per base sequence quality")
-  return(qc$per_base_sequence_quality)
-}
 
 qcFiles <- list.files(fastqcDir, full.names=TRUE)[grepl("zip",list.files(fastqcDir))]
 
@@ -197,20 +162,9 @@ p2
 #' `r if(debarcodeDirExists) { "# UMI Parsing" }`
 #+ eval=debarcodeDirExists, echo=FALSE, fig.width=8, fig.height=5, fig.align="left"
 if(debarcodeDirExists){
-	deb <- read.table(paste0(debarcodeDir,"/debarcode_stats.txt.",n), fill=T)
-	inputReads <- as.numeric(as.character(deb$V3[1]))
-	validBcReads <- as.numeric(as.character(deb$V3[2]))
-	invalidBcReads <- inputReads-validBcReads
-
-#create data frame
-df <- data.frame(
-  Metric = c("Input Reads", "Reads with Valid UMI", "% Reads with Valid UMI"),
-  Value = prettyNum(c(inputReads, validBcReads, signif(validBcReads/inputReads, 3) * 100), big.mark = ",", scientific = F),
-  stringsAsFactors = FALSE
-)
 
 #create kable output
-kable(df, "latex", booktabs = T) %>%
+kable(deb_df, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
 #plotly
@@ -228,9 +182,6 @@ pl
 #+ eval=trimDirExists, echo=FALSE, fig.asp=0.75, fig.align="center"
 
 #Import metadata from cutadapt and format it
-rt <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, fill=T, sep=":") 
-names(rt) <- c("Metric","Value")
-rt$Value <- as.numeric(gsub(",","",unlist(lapply(strsplit(as.character(rt$Value), split="\\s+"), `[[`, 2)))) #this is gross, i'm sorry for nesting 6 functions
 
 #generate table for plotting
 dfx <- data.frame(" "="Reads",
@@ -254,55 +205,24 @@ kable(rt, "latex", booktabs = T) %>%
 #+ eval=alignmentDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F
 
 #Using a subset of PICARD outputs
-rt <- read.table(paste0(alignmentDir, "/rna_metrics.txt.",n), nrows=1, header=T, fill=T)
-starReport <- read.table(paste0(alignmentDir, "/Log.final.out.",n), sep="|", fill=T)
-starReport$V2 <- gsub("\t","",starReport$V2)
-
-#parse out relevant stuff from STAR report
-inputReads <- as.numeric(starReport$V2[grep("Number of input reads",starReport$V1)])
-uniqueMapped <- as.numeric(starReport$V2[grep("Uniquely mapped reads number",starReport$V1)])
-multiMapped <- as.numeric(starReport$V2[grep("Number of reads mapped to multiple loci",starReport$V1)])
-tooManyMapped <- as.numeric(starReport$V2[grep("Number of reads mapped to too many loci",starReport$V1)])
-unmapped <- inputReads-uniqueMapped-multiMapped
-
-df <- data.frame("Reads Input" = inputReads,
-                 "Uniquely Mapped Reads" = uniqueMapped,
-                 "Multi-mapped Reads" = multiMapped,
-                 "Reads mapped to too many loci" = tooManyMapped,
-                 "Unmapped Reads" = unmapped,
-                 "PF Bases" = rt$PF_BASES,
-                 "PF Aligned Bases" = rt$PF_ALIGNED_BASES,
-                 "Coding Bases" = rt$CODING_BASES,
-                 "UTR Bases" = rt$UTR_BASES,
-                 "Intronic Bases" = rt$INTRONIC_BASES,
-                 "Intergenic Bases" = rt$INTERGENIC_BASES,
-                 "Ribosomal Bases" = rt$RIBOSOMAL_BASES,
-                 "Median CV Coverage" = rt$MEDIAN_CV_COVERAGE,
-                 "Median 5' Bias" = rt$MEDIAN_5PRIME_BIAS,
-                 "Median 3' Bias" = rt$MEDIAN_3PRIME_BIAS,
-                 "Median 5' to 3' Bias" = rt$MEDIAN_5PRIME_TO_3PRIME_BIAS,
-                 "% Stranded" = rt$PCT_CORRECT_STRAND_READS * 100,
-                 check.names= F)
-df <- as.data.frame(t(df)) %>% rownames_to_column()
-names(df) <- c("Metric", "Value")
-
 dfx <- data.frame(" "="Bases",
-                  "Coding" = df$Value[which(df$Metric=="Coding Bases")],
-                  "UTR" = df$Value[which(df$Metric=="UTR Bases")],
-                  "Intronic" = df$Value[which(df$Metric=="Intronic Bases")],
-                  "Intergenic" = df$Value[which(df$Metric=="Intergenic Bases")],
-                  "Ribosomal" = df$Value[which(df$Metric=="Ribosomal Bases")], check.names=F)
+                  "Coding" = align_df$Value[which(align_df$Metric=="Coding Bases")],
+                  "UTR" = align_df$Value[which(align_df$Metric=="UTR Bases")],
+                  "Intronic" = align_df$Value[which(align_df$Metric=="Intronic Bases")],
+                  "Intergenic" = align_df$Value[which(align_df$Metric=="Intergenic Bases")],
+                  "Ribosomal" = align_df$Value[which(align_df$Metric=="Ribosomal Bases")], check.names=F)
+
 
 pl <- plot_ly(dfx, x = ~`Coding`, y= ~" ", type = "bar", name="Coding", orientation = "h", hoverinfo = 'text', text = ~paste("Coding: ", dfx$`Coding`)) %>% 
-  add_trace(x = ~`UTR`, name = "UTR", hoverinfo = 'text', text = ~paste("UTR: ", round(dfx$`UTR`))) %>%
-  add_trace(x = ~`Intronic`, name = "Intronic", hoverinfo = 'text', text = ~paste("Intronic: ", round(dfx$`Intronic`))) %>%
-  add_trace(x = ~`Intergenic`, name = "Intergenic", hoverinfo = 'text', text = ~paste("Intergenic: ", round(dfx$`Intergenic`))) %>%
-  add_trace(x = ~`Ribosomal`, name = "Ribosomal", hoverinfo = 'text', text = ~paste("Ribosomal: ", round(dfx$`Ribosomal`))) %>%
+  add_trace(x = ~`UTR`, name = "UTR", hoverinfo = 'text', text = ~paste("UTR: ", round(as.numeric(dfx$`UTR`)))) %>%
+  add_trace(x = ~`Intronic`, name = "Intronic", hoverinfo = 'text', text = ~paste("Intronic: ", round(as.numeric(dfx$`Intronic`)))) %>%
+  add_trace(x = ~`Intergenic`, name = "Intergenic", hoverinfo = 'text', text = ~paste("Intergenic: ", round(as.numeric(dfx$`Intergenic`)))) %>%
+  add_trace(x = ~`Ribosomal`, name = "Ribosomal", hoverinfo = 'text', text = ~paste("Ribosomal: ", round(as.numeric(dfx$`Ribosomal`)))) %>%
   layout(barmode = 'stack', xaxis = list(title = "Aligned Bases"), yaxis = list(title = ""), legend = list(orientation = 'h', x=0.3, y=-0.4))
 
 #create table
-df$Value <- prettyNum(df$Value, big.mark = ",", scientific = F)
-kable(df, "latex", booktabs = T) %>%
+align_df$Value <- prettyNum(align_df$Value, big.mark = ",", scientific = F)
+kable(align_df, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
 rt_cov <- read.table(paste0(alignmentDir, "/rna_metrics.txt.",n), skip = 10, header=T, fill=T)
@@ -335,30 +255,8 @@ pl
 
 #' `r if(dedupDirExists) { "# Deduplication" }`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
-file_loc = paste0(dedupDir, "/dedup.log.",n)
-umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
-inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7|sed 's/,//g'"), intern=T))
-outputAlignments <- as.numeric(system(paste('grep "reads out"', file_loc, "| cut -d: -f4"), intern=T))
-meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
-maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
-uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
-uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
-
-df <- data.frame("Total input alignments" = inputAlignments,
-                 "Total output alignments" = outputAlignments,
-                 "Unique UMIs observed" = umisObserved,
-                 "Average UMIs per position" = meanUmiPerPos,
-                 "Maximum UMIs per position" = maxUmiPerPos,
-                 "Unique Input Reads" = uniqInputReads,
-                 "Unique Output Reads" = uniqOutputReads,
-                 "% PCR Duplicates" = (1 - (uniqOutputReads / uniqInputReads)) * 100,
-                 check.names= F)
-
-df <- as.data.frame(t(df)) %>% rownames_to_column()
-names(df) <- c("Metric", "Value")
-
-df$Value <- prettyNum(df$Value, big.mark = ",", scientific=FALSE)
-kable(df, "latex", booktabs = T) %>%
+dedup_df$Value <- prettyNum(dedup_df$Value, big.mark = ",", scientific=FALSE)
+kable(dedup_df, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
 #' \newpage
@@ -366,37 +264,25 @@ kable(df, "latex", booktabs = T) %>%
 #' `r if(countsDirExists) { "# Transcriptome" }`
 #+ eval=countsDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
 #parse genecounts summary for longRNA
-
-longRNAcounts <- read.table(paste0(countsDir, "/gene_counts_longRNA.summary.",n), skip=1)
-colnames(longRNAcounts) <- c("Result", "Count")
-longRNAcounts$Result <- gsub("_", " ", longRNAcounts$Result)
-longRNAcounts <- rbind(data.frame(Result="Total Alignments", Count=sum(longRNAcounts$Count)), longRNAcounts)
-
-#handle biotypes
-countLong <- read.table(paste0(countsDir, "/gene_counts_longRNA.",n), sep="\t", header=T, col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
-biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
-biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
-
-countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
-countAll <- countLong
-countByBiotype <- countAll %>% filter(!is.na(gene_biotype)) %>% group_by(gene_biotype) %>% summarise(count = sum(Count)) %>% arrange(-count)
-countByBiotype$gene_biotype <- factor(countByBiotype$gene_biotype, levels = unique(countByBiotype$gene_biotype)[order(countByBiotype$count, decreasing = TRUE)])
-countByBiotype <- countByBiotype %>% filter(count > 0) #filter biotypes with no counts
-
-longRNAcounts <- rbind(longRNAcounts,data.frame(Result="Genes with >0 Counts", Count=dim(countLong[countLong$Count >0,])[1]))
 #create plot with labels above bars; plotly handles autoscaling
+
+write("Plotting counts information", stderr())
+#countByBiotype$Biotype <- factor(countByBiotype$Biotype, levels = unique(countByBiotype$Biotype)[order(countByBiotype$Count, decreasing = TRUE)]) 
+
 pl <- plot_ly(countByBiotype,
-              x=~gene_biotype,
-              y=~count,
-              text=~prettyNum(count, big.mark = ",", scientific=FALSE),
-              textposition='outside',
-              type='bar')
+	      x=~Biotype,
+	      y=~as.numeric(gsub(",","",Count)),
+	      text=~prettyNum(Count, big.mark = ",", scientific=FALSE),
+	      textposition='outside',
+	      type='bar')
+plot_by_biotype = countByBiotype
+plot_by_biotype$Count = as.numeric(gsub(",","",plot_by_biotype$Count))
+pl <- plot_ly(plot_by_biotype, x=~Biotype, y=~Count, type='bar')
 
-pl <- plot_ly(countByBiotype, x=~gene_biotype, y=~count, type='bar', width=700)
-
-countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientific=FALSE)
+#countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientific=FALSE)
 
 #render tables and plots on separate pages
+
 #' `r if(exists("longRNAcounts")) { "## longRNA Counts" }`
 #+ eval=exists("longRNAcounts"), echo=FALSE, fig.asp=1, fig.align="center", message=F
 kable(longRNAcounts, "latex", booktabs = T) %>%
@@ -416,26 +302,5 @@ pl
 
 #' `r if(TRUE) { "# Pipeline Metadata" }`
 #+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
-env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
-env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
-umi_tools_version <- system("umi_tools --version", intern=T)
-umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
-env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
-containerInfo <- read.table("/opt/biorad/imageInfo.txt", stringsAsFactors=FALSE)
-containerInfo <- data.frame("rowname" = paste(containerInfo[,1], containerInfo[,2]), env = containerInfo[,3], stringsAsFactors=FALSE)
-containerInfo[3,2] <- substr(containerInfo[3,2], 1,7)
-anno_path <- unlist(strsplit(anno_dir,"/"))
-referenceGenome <- anno_path[grepl("hg38|mm10|rnor6", anno_path)]
-if(length(referenceGenome) == 0)
-{
-  referenceGenome = "NA"
-}
-isErcc <- any(grepl("ercc", anno_path))
-anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), comment.char="", fill=T, sep=",")
-anno_source <- gsub("#!annotation-source ", "", anno_version$V1[grep("annotation-source", anno_version$V1)])
-localVars <- data.frame(rowname = c("Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
-env <- rbind(containerInfo, localVars, env)
-env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
-colnames(env) <- NULL
 kable(env, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
