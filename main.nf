@@ -381,24 +381,25 @@ if(params.minGeneType != "none"){
         process thresholdResults{
                 label 'low_memory'
                 tag 'thresholdGenes'
-                publishDir "${params.outDir}/$name/RNAcounts", mode:'copy'
+                publishDir "${params.outDir}/$name/RNACounts", mode:'copy'
 
                 // take in user specified cutoff and type and generate appropriate report
                 // should also include biotype 
                 input:
 		val name from thresh_ch
 		file ("./out/") from rpkm_threshold_ch 
-		file ("./out/") from count_theshold_ch	
+		file ("./out/") from count_threshold_ch	
 
                 output:
                 file "Full_count_table.csv"
                 file "Filter_count_table.csv"
-                file "fileter_count_table.csv.$name" into threshold_ch
+                file "Filter_count_table.csv.$name" into threshold_ch
 
                 script:
                 """
-                cp /opt/boprad/src/threshold_report.R ./tmp/threshold_report.R
-                Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+		mkdir -p ./tmp
+                cp /opt/biorad/src/threshold_report.R ./tmp/threshold_report.R
+                Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${params.minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
 		cp Filter_count_table.csv Filter_count_table.csv.$name                
                 """
         }

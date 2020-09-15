@@ -2,6 +2,10 @@
 args = commandArgs(trailingOnly =T)
 type = args[1]
 value = args[2]
+base_dir = args[3]
+temp_dir = args[4]
+anno_dir = args[5]
+
 
 countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="longRNA.summary")))
 countsDirExists <- length(countsDir) == 1
@@ -25,17 +29,17 @@ write.table(together, "Full_count_table.csv", sep=",", header=T)
 
 if(type =="reads"){
 	together = together[together$Count >value,]
-	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+	write.table(together, "Filter_count_table.csv", sep=",", header=T, row.names=F)
 }
 else if( type == "RPKM"){
 	together = together[together$RPKM >value,]
-	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+	write.table(together, "Filter_count_table.csv", sep=",", header=T,row.names=F)
 }
 else if( type == "TPM"){
 	together = together[together$TPM >value,]
-	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+	write.table(together, "Filter_count_table.csv", sep=",", header=T, row.names=F)
 }
 else{
-	write.table(together, "Filter_count_table.csv", sep=",", header=T)
+	write.table(together, "Filter_count_table.csv", sep=",", header=T, row.names=F)
 }
 
