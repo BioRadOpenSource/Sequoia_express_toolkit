@@ -378,12 +378,12 @@ countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientif
 
 #render tables behind pills
 write("Rendering counts information", stderr())
-cat("###", "RNA count summary", "\n")
+cat("###", "RNA Count Summary", "\n")
 countLong = countLong[countLong$Count >0,]
 datatable(countLong, rownames=F)
 cat(" \n \n")
 
-cat("###", "RNA count summary apendix", "\n")
+cat("###", "RNA Count Summary appendix", "\n")
 datatable(longRNAcounts, escape=F, options=list(pageLength=20),rownames=F)
 cat(" \n \n")
 
