@@ -46,7 +46,7 @@ kable(align_frame,  "latex", booktabs = T) %>%
 	kable_styling(latex_options = c("striped", "hold_position"))
 
 #' \newpage
-#' `r {"# Summary Alignement Report"}`
+#' `r {"# Summary Alignment Report"}`
 #+ echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
 kable(report_frame,  "latex", booktabs = T) %>%
 	kable_styling(latex_options = c("striped", "hold_position"))
