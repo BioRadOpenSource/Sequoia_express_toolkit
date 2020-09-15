@@ -49,10 +49,10 @@ kableStyle <- c("striped", "condensed", "hover", "responsive")
 #' }
 #' </style>
 
-#' `r {"# Summary Alignement Stats {.tabset .tabset-fade .tabset-pills}"}`
+#' `r {"# Summary Alignment Stats {.tabset .tabset-fade .tabset-pills}"}`
 datatable(align_frame, rownames=F, options=list(pageLength=20)) 
 
-#' `r {"# Summary Alignement Report {.tabset .tabset-fade .tabset-pills}"}`
+#' `r {"# Summary Alignment Report {.tabset .tabset-fade .tabset-pills}"}`
 datatable(report_frame, rownames=F, options=list(pageLength=20))
 
 #' `r if(dedupDirExists) {"# Summary Deduplicationt Statstistics {.tabset .tabset-fade .tabset-pills}"}`
