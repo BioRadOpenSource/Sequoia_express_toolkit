@@ -79,10 +79,13 @@ for(n in names){
 	}
 
 	if(trimDirExists){
-		rt <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, fill=T, sep=":")
+		rt <- read.table(paste0(trimDir, "/trimlog.log.",n), skip=7, fill=T, sep=":", stringsAsFactors=F)
 		names(rt) <- c("Metric","Value")
 		rt$Value <- as.numeric(gsub(",","",unlist(lapply(strsplit(as.character(rt$Value), split="\\s+"), `[[`, 2)))) #this is gross, i'm sorry for nesting 6 functions
-		
+		if(length(grep("Read 2", rt$Metric))>0){
+			index = grep("Read [1|2]$", rt$Metric)
+			rt$Metric[index] = paste0(rt$Metric[index]," basepairs")
+		}	
 	}
 
 	if(alignmentDirExists){
