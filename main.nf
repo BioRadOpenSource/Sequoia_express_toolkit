@@ -169,7 +169,7 @@ process cutAdapt {
 	}
 
 	if (params.seqType == "SE") {
-	read1 = reads
+	read1 = reads[0]
 		if(params.umiType.toLowerCase() == "b" && !params.noTrim){
 			cutter = "-u 9"
 		}
