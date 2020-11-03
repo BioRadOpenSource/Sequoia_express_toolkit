@@ -474,6 +474,7 @@ process metaReport{
 	file 'batch_summary.csv'
 	file 'batch_summary.html'
 	file 'batch_summary.pdf'
+	val "done" into clean_workspace
 	script:	
 	"""
 	mkdir -p tmp/
@@ -484,7 +485,17 @@ process metaReport{
 	cp ./tmp/batch_pdf.pdf ./batch_summary.pdf
 	"""
 }
+if(params.tidy == true){
+	process tidy_up{
+		input: val x from clean_workspace
 
+		
+		"""
+		 rm -r ${workflow.workDir}
+		""" 
+
+	}
+}
 
 /* Helper Functions */
 def readParamsFromJsonSettings() {
