@@ -315,7 +315,7 @@ if (!params.skipUmi) {
         mkdir -p ./deduplicated
         umi_tools dedup -I $bam --output-stats=./deduplicated \
         --method unique --log ./dedup.log \
-        --extract-umi-method=tag --umi-tag=XU \
+        --extract-umi-method=tag --umi-tag=XU --paired\
         > ./Aligned.sortedByCoord.deduplicated.out.bam
         sambamba index -t $task.cpus ./Aligned.sortedByCoord.deduplicated.out.bam
         printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
