@@ -349,7 +349,7 @@ process count_rna {
     strand = params.reverseStrand ? "-s 2" : "-s 1"
     just_bam = bam[0] 
     """
-    featureCounts -T $task.cpus --primary -M -t exon -g $geneId $strand -Q $params.minMapqToCount \
+    featureCounts -p -T $task.cpus --primary -M -t exon -g $geneId $strand -Q $params.minMapqToCount \
     -a $longRNAgtfFile \
     -o ./gene_counts_longRNA \
     -R BAM $just_bam
