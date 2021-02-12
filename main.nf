@@ -311,11 +311,15 @@ if (!params.skipUmi) {
 
         script:
         (bam, bai) = bams
+	paired = "--paired"
+	if (params.seqType == "SE") {
+		paired=""
+	}
         """
         mkdir -p ./deduplicated
         umi_tools dedup -I $bam --output-stats=./deduplicated \
         --method unique --log ./dedup.log \
-        --extract-umi-method=tag --umi-tag=XU --paired\
+        --extract-umi-method=tag --umi-tag=XU $paired\
         > ./Aligned.sortedByCoord.deduplicated.out.bam
         sambamba index -t $task.cpus ./Aligned.sortedByCoord.deduplicated.out.bam
         printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
@@ -347,9 +351,13 @@ process count_rna {
 
     script:
     strand = params.reverseStrand ? "-s 2" : "-s 1"
-    just_bam = bam[0] 
+    just_bam = bam[0]
+    paired = "-p" 
+    if (params.seqType == "SE") {
+	paried = ""
+	}
     """
-    featureCounts -p -T $task.cpus --primary -M -t exon -g $geneId $strand -Q $params.minMapqToCount \
+    featureCounts $paired -T $task.cpus --primary -M -t exon -g $geneId $strand -Q $params.minMapqToCount \
     -a $longRNAgtfFile \
     -o ./gene_counts_longRNA \
     -R BAM $just_bam
