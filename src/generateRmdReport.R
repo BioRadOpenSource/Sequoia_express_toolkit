@@ -118,7 +118,7 @@ for(n in names){
 				 "Median 3' Bias" = rna$MEDIAN_3PRIME_BIAS,
 				 "Median 5' to 3' Bias" = rna$MEDIAN_5PRIME_TO_3PRIME_BIAS,
 				 "% Stranded" = rna$PCT_CORRECT_STRAND_READS * 100,
-				 "% rRNA bases" = (rna$RIBOSOMAL_BASES/rna$PF_BASES)
+				 "% rRNA bases" = (rna$RIBOSOMAL_BASES/rna$PF_BASES) *100,
 				 check.names= F)
 		align_df <- as.data.frame(t(align_df)) %>% rownames_to_column()
 		names(align_df) <- c("Metric", "Value")
