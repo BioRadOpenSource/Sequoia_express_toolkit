@@ -191,6 +191,10 @@ process cutAdapt {
 	if(params.umiType.toLowerCase() == "c" && !params.noTrim){
                         cutter = "-u 1 -U 8"
                 }
+	//used for testing of other umi layouts 
+	if(params.umiType.toLowerCase() == "d" && !params.noTrim){
+                        cutter = "-U 11"
+		}
 	"""
     	cutadapt $cutter -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \

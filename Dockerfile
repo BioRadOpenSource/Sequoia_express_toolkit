@@ -118,8 +118,9 @@ RUN apt-get update && apt-get install -y \
     pandoc \
     libssl-dev \
     libxml2-dev \
-    fonts-freefont-ttf 
-#ENV R_VER=3.4.4
+    fonts-freefont-ttf \
+    libfontconfig1-dev
+#ENV R_VER=3.6.3
 #RUN curl -SLO https://cran.rstudio.com/src/base/R-3/R-${R_VER}.tar.gz
 #RUN tar -xzvf R-${R_VER}.tar.gz
 #RUN mkdir -p ${DEST_DIR}/R
@@ -131,7 +132,9 @@ RUN apt-get update && apt-get install -y \
 #RUN cd 
 #RUN ln -s ${DEST_DIR}/R/R-${R_VER}/R /usr/local/bin/R
 #RUN ln -s ${DEST_DIR}/R/R-${R_VER}/Rscript /usr/local/bin/Rscript
-
+RUN echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/" >> /etc/apt/sources.list 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 
+RUN apt update
 
 RUN apt-get install -y r-base -q
 RUN Rscript -e 'install.packages("XML", repos = "http://www.omegahat.net/R")'
