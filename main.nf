@@ -137,7 +137,7 @@ if (!params.skipUmi) {
 	umiLoc = params.umiType.toLowerCase()
         """
         bash /opt/biorad/src/fastq_to_tsv.sh $reads \
-            | parallel --pipe python3 /opt/biorad/src/debarcode_${umiLoc}.py \
+            | parallel --pipe python3 /opt/biorad/src/debarcode.py \
             | tee >(awk '/^MM/{bad=bad+1}/^@/{good=good+1}END{print "Total Reads: " good + bad; print "Good Reads: " good; print "Bad Reads: " bad}' > debarcode_stats.txt) \
             | grep -ve '^MM' \
             | bash /opt/biorad/src/tsv_to_fastq.sh ${sample_id}_debarcoded_R1.fastq.gz ${sample_id}_debarcoded_R2.fastq.gz compress
@@ -185,20 +185,11 @@ process cutAdapt {
 	//paired end 
 	read1 = reads[0]
 	read2 = reads[1] 
-	if(params.umiType.toLowerCase() == "b" && !params.noTrim){
-                        cutter = "-u 9"
-                }
-	if(params.umiType.toLowerCase() == "c" && !params.noTrim){
-                        cutter = "-u 1 -U 8"
-                }
-	//used for testing of other umi layouts 
-	if(params.umiType.toLowerCase() == "d" && !params.noTrim){
-                        cutter = "-U 11"
-		}
+        cutter = "-u 1 -U 8"
 	"""
     	cutadapt $cutter -m ${params.minBp} -j $task.cpus \
-             -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
-             -o trimmed_R1.fastq.gz -p trimmed_R2.fastq.gz $read1 $read2 1> trimlog.log
+        -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
+        -o trimmed_R1.fastq.gz -p trimmed_R2.fastq.gz $read1 $read2 1> trimlog.log
     	mv trimlog.log trimlog.log.$name
     	"""
 
