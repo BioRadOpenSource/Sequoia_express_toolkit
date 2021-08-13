@@ -134,7 +134,6 @@ if (!params.skipUmi) {
 		reads = "$reads $reads"
 	}
 	
-	umiLoc = params.umiType.toLowerCase()
         """
         bash /opt/biorad/src/fastq_to_tsv.sh $reads \
             | parallel --pipe python3 /opt/biorad/src/debarcode.py \
