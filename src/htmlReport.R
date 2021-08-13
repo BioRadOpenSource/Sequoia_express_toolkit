@@ -277,7 +277,8 @@ align_df$`Value` <- cell_spec(
                 "The median 5 prime bias of the 1000 most highly expressed transcripts. The 5 prime bias is calculated per transcript as: mean coverage of the 5 prime-most 100 bases divided by the mean coverage of the whole transcript.",
                 "The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per transcript as: mean coverage of the 3 prime-most 100 bases divided by the mean coverage of the whole transcript.",
                 "The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts.",
-                "The Percentage of reads corresponding to transcripts which map to the correct strand of a reference genome "),
+                "The Percentage of reads corresponding to transcripts which map to the correct strand of a reference genome ",
+		"Fraction of aligned bases that mapped to regions encoding ribosomal RNA"),
     
     title = NULL,
     position = "left"
