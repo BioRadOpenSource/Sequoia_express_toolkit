@@ -144,6 +144,12 @@ RUN Rscript -e 'webshot::install_phantomjs()'
 RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell", "titling","mathspec"))'
 ######### End R Setup ###########
 
+#Integrate RUST for DEAD and rumi#########
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+RUN apt-get install -y clang 
+	
+RUN export LIBCLANG_PATH=/usr/lib64/ 
+
 WORKDIR /opt/biorad
 
 COPY . .
