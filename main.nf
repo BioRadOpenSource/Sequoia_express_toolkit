@@ -321,6 +321,10 @@ if (!params.skipUmi) {
 	cp dedup.log dedup.log.$name
         """
     }
+//    process rumi{
+	
+//	"rumi --is_paired ../output/express/IndexA21_S21_L001/umiTagging/Aliged.sortedByCoord.tagged.bam --output rumi_dedup.bam --umi_tag XU"
+//	}
 } else {
     umiTagging_ch.into { BamLong_ch} 
     report_dedup = Channel.empty()

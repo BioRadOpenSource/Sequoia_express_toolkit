@@ -145,15 +145,23 @@ RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow"
 ######### End R Setup ###########
 
 #Integrate RUST for DEAD and rumi#########
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN apt-get install -y clang 
 	
-RUN export LIBCLANG_PATH=/usr/lib64/ 
+RUN export LIBCLANG_PATH=/usr/lib32/
+ 
 
 WORKDIR /opt/biorad
 
 COPY . .
 
+#install rumi and DEAD
+RUN ["/bin/bash", "-c", "source ~/.cargo/env"]
+#RUN cargo install src/rumi/
+WORKDIR /opt/biorad/src
+RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install rumi "]           
+
+WORKDIR /opt/biorad 
 # Pull in some ARGS for defining container name
 ARG IMAGE_NAME
 ARG SOURCE_BRANCH
