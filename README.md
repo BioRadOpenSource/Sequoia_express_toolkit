@@ -11,10 +11,10 @@ Nextlfow is the primary software the runs and coodinates the pipeline (groovy / 
 For the majority of users there are only some basic commands that will need to be done but for a full list of options please see the nextflow.config file, using `nextflow run main.nf --help` will only lis the basic options at the moment enough to get a basic run started. 
 
 #### Generate the docker image needed for the virtual enviorment
-This pipeline uses a docker conainer as a virtual enviorment to run the software as OS agnostic as possible. So outside of intsalling docker and nextflow no other software is required. To use this docker container one can simply build it from the included docker file. 
+This pipeline uses a docker conainer as a virtual enviorment to run the software as OS agnostic as possible. So outside of intsalling docker and nextflow no other software is required. To use this docker container one can simply build it from the included docker file. Some of the repos at the time of development are not public and maynot be able to be created and you maybe required to use the second docker pull method to use this toolkit.
 
 ```
-Docker build -t bioraddbg/sequoia-express [path to Dockerfile]
+Docker build -t bioraddbg/sequoia-express [path to Dockerfile] --build-arg GITHUB_TOKEN=[your token here]
 
 ```
 Alernatively this docker file will also be created and pushed after finalization to dockerhub, where it can be pulled directly with no extra fuss.
