@@ -157,9 +157,18 @@ COPY . .
 
 #install rumi and DEAD
 RUN ["/bin/bash", "-c", "source ~/.cargo/env"]
+RUN apt-get update -y
+RUN apt-get install git -y
 #RUN cargo install src/rumi/
 WORKDIR /opt/biorad/src
+ARG GITHUB_TOKEN=""
+RUN git clone --branch sequoia \
+    https://$GITHUB_TOKEN:x-oauth-basic@github.com/digitalbiology/debarcoder.git
+RUN git clone https://$GITHUB_TOKEN:x-oauth-basic@github.com/sstadick/rumi.git
+#creates executable rumi
 RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install rumi "]           
+#creates exe of dead
+RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install --path ./debarcoder "]
 
 WORKDIR /opt/biorad 
 # Pull in some ARGS for defining container name
