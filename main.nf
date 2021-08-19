@@ -81,7 +81,7 @@ Channel
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .set { read_files}
 
-read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation, raw_reads_dead}
+read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation; raw_reads_dead}
 // Begin Processing
 
 if (params.validateInputs) {
@@ -156,7 +156,7 @@ if (!params.skipUmi) {
 
 	script:
 	"""
-	RUST_LOG=info dead $reads -c configs/2dexpress.json -a DefaultParser -o ${sample_id}_debarcoded
+	RUST_LOG=info dead $reads -c src/debarcoder/configs/2dexpress.json -a DefaultParser -o ./
 	"""
 	}
 } else {
