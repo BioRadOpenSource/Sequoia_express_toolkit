@@ -81,7 +81,7 @@ Channel
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .set { read_files}
 
-read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation}
+read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation, raw_reads_dead}
 // Begin Processing
 
 if (params.validateInputs) {
@@ -143,6 +143,22 @@ if (!params.skipUmi) {
 	mv debarcode_stats.txt debarcode_stats.txt.$sample_id
         """
     }
+    process DEAD{
+	label 'mid_cpu'
+	label 'mid_mem'
+	tag "debarcode dead on $sample_id"
+	publishDir "${params.outDir}/$sample_id/dead", mode: 'copy'
+	
+	input:
+	set sample_id, file(reads) from raw_reads_dead
+	output:
+	file('*')	
+
+	script:
+	"""
+	RUST_LOG=info dead $reads -c configs/2dexpress.json -a DefaultParser -o ${sample_id}_debarcoded
+	"""
+	}
 } else {
     debarcoded_ch = raw_reads
     report_debarcode = Channel.empty()
@@ -169,10 +185,6 @@ process cutAdapt {
 
 	if (params.seqType == "SE") {
 	read1 = reads[0]
-		if(params.umiType.toLowerCase() == "b" && !params.noTrim){
-			cutter = "-u 9"
-		}
-		//single end with UMI on R1
     	"""
    	 cutadapt $cutter -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
@@ -274,7 +286,7 @@ if (!params.skipUmi) {
         set val(name) , file(bams) from umiTagging_ch
 
         output:
-        set val(name), file("Aligned.sortedByCoord.tagged.bam*") into dedup_in_ch
+        set val(name), file("Aligned.sortedByCoord.tagged.bam*") into dedup_in_ch, rumi_ch
         
         script:
         (bam, bai) = bams
@@ -321,10 +333,28 @@ if (!params.skipUmi) {
 	cp dedup.log dedup.log.$name
         """
     }
-//    process rumi{
+    process rumi{
+	label 'high_memory'
+	label 'mid_cpu'
+	tag "rust dedup on $name"
+	publishDir "${params.outDir}/$name/rumi", mode: 'copy'
 	
-//	"rumi --is_paired ../output/express/IndexA21_S21_L001/umiTagging/Aliged.sortedByCoord.tagged.bam --output rumi_dedup.bam --umi_tag XU"
-//	}
+	input:
+	set val(name), file(bams) from rumi_ch
+	output:	
+	file 'rumi_dedup.*' 
+	file 'log_rumi.*'
+
+	script:
+	(bam, bai) = bams
+	"""
+	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU 
+	sambamba index -t $task.cpus ./rumi_dedup.bam
+	printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	cp dedup.log log_rumi.$name
+	"""
+	}
 } else {
     umiTagging_ch.into { BamLong_ch} 
     report_dedup = Channel.empty()
