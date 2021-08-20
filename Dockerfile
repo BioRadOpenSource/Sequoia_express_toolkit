@@ -170,6 +170,17 @@ RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install rumi "]
 #creates exe of dead
 RUN ["/bin/bash", "-c", "~/.cargo/bin/cargo install --path ./debarcoder "]
 
+RUN cp debarcoder/configs/2dcomplete.json ./
+RUN rm -r debarcoder
+RUN rm -r rumi
+RUN cp /root/.cargo/bin/rumi ./
+RUN cp /root/.cargo/bin/dead ./
+RUN chmod 777 rumi
+RUN chmod 777 rumi
+ENV PATH=$PATH:/opt/biorad/src
+
+RUN GITHUB_TOKEN=""
+
 WORKDIR /opt/biorad 
 # Pull in some ARGS for defining container name
 ARG IMAGE_NAME

@@ -148,15 +148,19 @@ if (!params.skipUmi) {
 	label 'mid_mem'
 	tag "debarcode dead on $sample_id"
 	publishDir "${params.outDir}/$sample_id/dead", mode: 'copy'
-	
+	//define container?
+	container "bioraddbg/sequoia-express:rumi"	
+
 	input:
 	set sample_id, file(reads) from raw_reads_dead
 	output:
-	file('*')	
+	file("*.fastq.gz")
+	file("*.tsv")	
 
 	script:
 	"""
-	RUST_LOG=info dead $reads -c src/debarcoder/configs/2dexpress.json -a DefaultParser -o ./
+	export RUST_LOG=info	
+	dead -c /opt/biorad/src/2dcomplete.json -a DefaultParser -o ./ -i $sample_id $reads
 	"""
 	}
 } else {
@@ -349,9 +353,10 @@ if (!params.skipUmi) {
 	(bam, bai) = bams
 	"""
 	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU 
-	sambamba index -t $task.cpus ./rumi_dedup.bam
+	sambamba sort -t $task.cpus ./rumi_dedup.bam -o rumi_dedup.sort.bam 
+	sambamba index -t $task.cpus ./rumi_dedup.sort.bam
 	printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
-	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
 	cp dedup.log log_rumi.$name
 	"""
 	}
