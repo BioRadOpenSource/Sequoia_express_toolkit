@@ -152,10 +152,10 @@ if (!params.skipUmi) {
 	container "bioraddbg/sequoia-express:rumi"	
 
 	input:
-	set sample_id, file(reads) from raw_reads_dead
+	set sample_id, file(reads) from raw_reads
 	output:
-	file("*.fastq.gz")
-	file("*.tsv")	
+	set val(sample_id), file("*.fastq.gz") into debarcoded_ch
+	file("*stats.tsv") into report_debarcode  
 
 	script:
 	"""
@@ -316,7 +316,7 @@ if (!params.skipUmi) {
         set val(name), file(bams) from dedup_in_ch
 
         output:
-        set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") into BamLong_ch
+        set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") // into BamLong_ch
         file 'dedup.log.*' into report_dedup, meta_dedup
 
         script:
@@ -346,6 +346,7 @@ if (!params.skipUmi) {
 	input:
 	set val(name), file(bams) from rumi_ch
 	output:	
+	set val(name), file("rumi_dedup.sort.bam*") into BamLong_ch
 	file 'rumi_dedup.*' 
 	file 'log_rumi.*'
 
