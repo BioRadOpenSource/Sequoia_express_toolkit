@@ -117,33 +117,8 @@ process fastQc {
 //TODO: this will need an update based on where they put the UMI
 // Only extract barcodes if umiAware
 if (!params.skipUmi) {
+    
     process debarcode{
-        label 'mid_cpu'
-        tag "debarcode on $sample_id"
-        publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
-
-        input:
-        set sample_id, file(reads) from raw_reads
-
-        output:
-        set val(sample_id), file('*.fastq.gz') into debarcoded_ch
-        file 'debarcode_stats.txt.*' into report_debarcode
-
-        script:
-	if(params.seqType == "SE"){
-		reads = "$reads $reads"
-	}
-	
-        """
-        bash /opt/biorad/src/fastq_to_tsv.sh $reads \
-            | parallel --pipe python3 /opt/biorad/src/debarcode.py \
-            | tee >(awk '/^MM/{bad=bad+1}/^@/{good=good+1}END{print "Total Reads: " good + bad; print "Good Reads: " good; print "Bad Reads: " bad}' > debarcode_stats.txt) \
-            | grep -ve '^MM' \
-            | bash /opt/biorad/src/tsv_to_fastq.sh ${sample_id}_debarcoded_R1.fastq.gz ${sample_id}_debarcoded_R2.fastq.gz compress
-	mv debarcode_stats.txt debarcode_stats.txt.$sample_id
-        """
-    }
-    process DEAD{
 	label 'mid_cpu'
 	label 'mid_mem'
 	tag "debarcode dead on $sample_id"
