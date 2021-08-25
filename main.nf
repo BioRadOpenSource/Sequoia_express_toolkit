@@ -122,7 +122,7 @@ if (!params.skipUmi) {
 	label 'mid_cpu'
 	label 'mid_mem'
 	tag "debarcode dead on $sample_id"
-	publishDir "${params.outDir}/$sample_id/dead", mode: 'copy'
+	publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
 	//define container?
 	container "bioraddbg/sequoia-express:rumi"	
 
@@ -143,7 +143,6 @@ if (!params.skipUmi) {
     report_debarcode = Channel.empty()
 }
 
-// TODO this needs updates from 2D complete as it only uses R1 but there could be an R2 
 process cutAdapt {
     label 'mid_cpu'
     tag "cutAdapt on $name"
@@ -291,7 +290,7 @@ if (!params.skipUmi) {
 	set val(name), file(bams) from dedup_in_ch
 	output:	
 	set val(name), file("rumi_dedup.sort.bam*") into BamLong_ch
-	file 'log_rumi.*' into report_dedup
+	file 'dedup.log.*' into report_dedup
 
 	script:
 	(bam, bai) = bams
@@ -301,7 +300,7 @@ if (!params.skipUmi) {
 	sambamba index -t $task.cpus ./rumi_dedup.sort.bam
 	printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
 	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
-	cp dedup.log log_rumi.$name
+	cp dedup.log dedup.log.$name
 	"""
 	}
 } else {
