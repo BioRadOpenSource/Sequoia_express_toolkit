@@ -295,6 +295,7 @@ if (!params.skipUmi) {
 	script:
 	(bam, bai) = bams
 	"""
+	export RUST_LOG=info 
 	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU 
 	sambamba sort -t $task.cpus ./rumi_dedup.bam -o rumi_dedup.sort.bam 
 	sambamba index -t $task.cpus ./rumi_dedup.sort.bam

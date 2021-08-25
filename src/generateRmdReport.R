@@ -64,9 +64,9 @@ for(n in names){
 	#set vraibles to be used by all to lower processing time 
 
 	if(debarcodeDirExists){
-		deb <- read.table(paste0(debarcodeDir,"/debarcode_stats.txt.",n), fill=T)
-		inputReads <- as.numeric(as.character(deb$V3[1]))
-		validBcReads <- as.numeric(as.character(deb$V3[2]))
+		deb <- read.table(paste0(debarcodeDir,"/",n,"_R1_barcode_stats.tsv"), fill=T,sep="\t",header=T)
+		inputReads <- as.numeric(as.character(deb$count[1]))
+		validBcReads <- as.numeric(as.character(deb$count[2]))
 		invalidBcReads <- inputReads-validBcReads
 
 		#create data frame
