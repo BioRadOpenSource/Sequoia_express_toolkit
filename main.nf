@@ -265,7 +265,7 @@ if (!params.skipUmi) {
         set val(name) , file(bams) from umiTagging_ch
 
         output:
-        set val(name), file("Aligned.sortedByCoord.tagged.bam*") into dedup_in_ch, rumi_ch
+        set val(name), file("Aligned.sortedByCoord.tagged.bam*") into dedup_in_ch
         
         script:
         (bam, bai) = bams
@@ -282,48 +282,16 @@ if (!params.skipUmi) {
 
     }
     process deduplication {
-        label 'high_memory'
-        label 'mid_cpu'
-        tag "dedup on $name"
-        publishDir "${params.outDir}/$name/dedup", mode: 'copy'
-
-        input:
-        set val(name), file(bams) from dedup_in_ch
-
-        output:
-        set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") // into BamLong_ch
-        file 'dedup.log.*' into report_dedup, meta_dedup
-
-        script:
-        (bam, bai) = bams
-	paired = "--paired"
-	if (params.seqType == "SE") {
-		paired=""
-	}
-        """
-        mkdir -p ./deduplicated
-        umi_tools dedup -I $bam --output-stats=./deduplicated \
-        --method unique --log ./dedup.log \
-        --extract-umi-method=tag --umi-tag=XU $paired\
-        > ./Aligned.sortedByCoord.deduplicated.out.bam
-        sambamba index -t $task.cpus ./Aligned.sortedByCoord.deduplicated.out.bam
-        printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
-        printf "unique_output_reads: " >> ./dedup.log; samtools view ./Aligned.sortedByCoord.deduplicated.out.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
-	cp dedup.log dedup.log.$name
-        """
-    }
-    process rumi{
 	label 'high_memory'
 	label 'mid_cpu'
 	tag "rust dedup on $name"
-	publishDir "${params.outDir}/$name/rumi", mode: 'copy'
+	publishDir "${params.outDir}/$name/dedup", mode: 'copy'
 	
 	input:
-	set val(name), file(bams) from rumi_ch
+	set val(name), file(bams) from dedup_in_ch
 	output:	
 	set val(name), file("rumi_dedup.sort.bam*") into BamLong_ch
-	file 'rumi_dedup.*' 
-	file 'log_rumi.*'
+	file 'log_rumi.*' into report_dedup
 
 	script:
 	(bam, bai) = bams
