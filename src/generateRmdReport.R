@@ -131,7 +131,7 @@ for(n in names){
 		outputAlignments <- as.numeric(system(paste('grep "Reads Out"', file_loc, "| cut -d' ' -f3"), intern=T))
 		#meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
 		#maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
-		chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ':' -f3"), intern=T))
+		chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ' ' -f3"), intern=T))
 		uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 		uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 
@@ -140,7 +140,7 @@ for(n in names){
 		                 #"Unique UMIs observed" = umisObserved,
 				 #"Average UMIs per position" = meanUmiPerPos,
 				 #"Maximum UMIs per position" = maxUmiPerPos,
-				 "Chimeric Reads",
+				 "Chimeric Reads" =chimera,
 				 "Unique Input Reads" = uniqInputReads,
 				 "Unique Output Reads" = uniqOutputReads,
 				 "% PCR Duplicates" = (1 - (uniqOutputReads / uniqInputReads)) * 100,
@@ -177,11 +177,11 @@ for(n in names){
 
 	}
 
-	env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+	env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
 	env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
-	umi_tools_version <- system("umi_tools --version", intern=T)
-	umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
-	env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
+	umi_tools_version <- system("rumi -V", intern=T)
+	umi_tools_version <- strsplit(umi_tools_version, " ")[[1]][2]
+	env[which(env$rowname=="RUMI_VERSION"), 2] = gsub(" ", "", umi_tools_version)
 	write("Preparing to read imageInfo.txt", stderr())
 	containerInfo <- read.table("/opt/biorad/imageInfo.txt", stringsAsFactors=FALSE)
 	write("Read imageInfo.txt", stderr())

@@ -73,7 +73,7 @@ for( f in files){
 	#maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
 	uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ':' -f2"), intern=T))
 	uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ':' -f2"), intern=T))
-	chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ':' -f3"), intern=T))
+	chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ' ' -f3"), intern=T))
 	pcr_dup = round(((1 - (uniqOutputReads / uniqInputReads)) * 100),digits=2)
 	df = data.frame(Results=c(
 			inputAlignments,
