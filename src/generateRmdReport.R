@@ -126,19 +126,21 @@ for(n in names){
 	
 	if(dedupDirExists){
 		file_loc = paste0(dedupDir, "/dedup.log.",n)
-		umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
-		inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7 |sed 's/,//g'"), intern=T))
-		outputAlignments <- as.numeric(system(paste('grep "reads out"', file_loc, "| cut -d: -f4"), intern=T))
-		meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
-		maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+		#umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
+		inputAlignments <- as.numeric(system(paste('grep "Reads In"', file_loc, "| cut -d' ' -f3"), intern=T))
+		outputAlignments <- as.numeric(system(paste('grep "Reads Out"', file_loc, "| cut -d' ' -f3"), intern=T))
+		#meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+		#maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+		chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ':' -f3"), intern=T))
 		uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 		uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 
 		dedup_df <- data.frame("Total input alignments" = inputAlignments,
 				 "Total output alignments" = outputAlignments,
-		                 "Unique UMIs observed" = umisObserved,
-				 "Average UMIs per position" = meanUmiPerPos,
-				 "Maximum UMIs per position" = maxUmiPerPos,
+		                 #"Unique UMIs observed" = umisObserved,
+				 #"Average UMIs per position" = meanUmiPerPos,
+				 #"Maximum UMIs per position" = maxUmiPerPos,
+				 "Chimeric Reads",
 				 "Unique Input Reads" = uniqInputReads,
 				 "Unique Output Reads" = uniqOutputReads,
 				 "% PCR Duplicates" = (1 - (uniqOutputReads / uniqInputReads)) * 100,
