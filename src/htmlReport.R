@@ -323,9 +323,10 @@ dedup_df$`Value` <- cell_spec(
   popover = spec_popover(
     content = c("The total number of alignments passed into deduplication",
                 "The total number of alignments output after deduplication",
-                "The total number of unique UMIs observed",
-                "The average UMIs per position",
-                "The maximum number of UMIs observed at any position",
+                #"The total number of unique UMIs observed",
+                #"The average UMIs per position",
+                #"The maximum number of UMIs observed at any position",
+		"Number of Identified Chimeric reads",
                 "The number of unique input reads passed into deduplication",
                 "The number of unique output reads after deduplication",
                 "The percentage of reads that are PCR duplicates ((1 - (Unique Output Reads / Unique Input Reads)) * 100)"),

@@ -121,10 +121,8 @@ if (!params.skipUmi) {
     process debarcode{
 	label 'mid_cpu'
 	label 'mid_mem'
-	tag "debarcode dead on $sample_id"
+	tag "debarcode DEAD on $sample_id"
 	publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
-	//define container?
-	container "bioraddbg/sequoia-express:rumi"	
 
 	input:
 	set sample_id, file(reads) from raw_reads
@@ -283,7 +281,7 @@ if (!params.skipUmi) {
     process deduplication {
 	label 'high_memory'
 	label 'mid_cpu'
-	tag "rust dedup on $name"
+	tag "rumi dedup on $name"
 	publishDir "${params.outDir}/$name/dedup", mode: 'copy'
 	
 	input:
