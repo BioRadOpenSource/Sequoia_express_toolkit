@@ -77,13 +77,13 @@ for( f in files){
 	unpaired <- as.numeric(system(paste('grep "Reads Unpaired"', file_loc, "| cut -d' ' -f3"), intern=T))
 	pcr_dup = round(((1 - (uniqOutputReads / (((uniqInputReads-unpaired)/2)+unpaired))) * 100),digits=2)
 	df = data.frame(Results=c(
-			(inputAlignments-unpaired)/2+unpaired,
+			round((inputAlignments-unpaired)/2+unpaired),
 			outputAlignments,
 			umisObserved,
 			#meanUmiPerPos,
 			#maxUmiPerPos,
 			#chimera,
-			(uniqInputReads-unpaired)/2+unpaired,
+			round((uniqInputReads-unpaired)/2+unpaired),
 			uniqOutputReads,
 			pcr_dup), check.names=F)
 	colnames(df) = unlist(strsplit(f,"\\."))[3]

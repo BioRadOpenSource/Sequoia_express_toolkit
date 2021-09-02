@@ -136,13 +136,13 @@ for(n in names){
 		uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 		uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 
-		dedup_df <- data.frame("Total input alignments" = (inputAlignments-unpaired)/2+unpaired,
+		dedup_df <- data.frame("Total input alignments" = round((inputAlignments-unpaired)/2+unpaired),
 				 "Total output alignments" = outputAlignments,
 		                 "Unique UMIs observed" = umisObserved,
 				 #"Average UMIs per position" = meanUmiPerPos,
 				 #"Maximum UMIs per position" = maxUmiPerPos,
 				 #"Chimeric Reads" =chimera,
-				 "Unique Input Reads" = (uniqInputReads-unpaired)/2+unpaired,
+				 "Unique Input Reads" = round((uniqInputReads-unpaired)/2+unpaired),
 				 "Unique Output Reads" = uniqOutputReads,
 				 "% PCR Duplicates" = (1 - (uniqOutputReads / (((uniqInputReads-unpaired)/2)+unpaired))) * 100,
 				 check.names= F)
