@@ -170,7 +170,7 @@ cat(" \n \n")
 #' `r if(debarcodeDirExists) { "## UMI Parsing {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=debarcodeDirExists, echo=FALSE, fig.asp=0.2, fig.align="center", message=F, results="asis"
 
-deb <- read.table(paste0(debarcodeDir,"/debarcode_stats.txt.",n), fill=T)
+deb <- read.table(paste0(debarcodeDir,"/",n,"_R1_barcode_stats.tsv"), fill=T)
 inputReads <- as.numeric(as.character(deb$V3[1]))
 validBcReads <- as.numeric(as.character(deb$V3[2]))
 invalidBcReads <- inputReads-validBcReads
@@ -178,7 +178,7 @@ invalidBcReads <- inputReads-validBcReads
 #create data frame
 df <- data.frame(
   Metric = c("Input Reads", "Reads with Valid UMI", "% Reads with Valid UMI"),
-  Value = c(inputReads, validBcReads, signif(validBcReads/inputReads, 3) * 100),
+  Value = c(inputReads, validBcReads, signif(validBcReads/inputReads, 4) * 100),
   stringsAsFactors = FALSE
 )
 noHtml = deb_df
@@ -323,10 +323,10 @@ dedup_df$`Value` <- cell_spec(
   popover = spec_popover(
     content = c("The total number of alignments passed into deduplication",
                 "The total number of alignments output after deduplication",
-                #"The total number of unique UMIs observed",
+                "The total number of unique UMIs observed",
                 #"The average UMIs per position",
                 #"The maximum number of UMIs observed at any position",
-		"Number of Identified Chimeric reads",
+		#"Number of Identified Chimeric reads",
                 "The number of unique input reads passed into deduplication",
                 "The number of unique output reads after deduplication",
                 "The percentage of reads that are PCR duplicates ((1 - (Unique Output Reads / Unique Input Reads)) * 100)"),
