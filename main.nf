@@ -297,8 +297,10 @@ if (!params.skipUmi) {
 	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU >dedup.log
 	sambamba sort -t $task.cpus ./rumi_dedup.bam -o rumi_dedup.sort.bam 
 	sambamba index -t $task.cpus ./rumi_dedup.sort.bam
-	printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
-	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	#printf "unique_input_umi: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1,10 | wc -l >> ./dedup.log
+	printf "unique_umi: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1,10 | sort -u | wc -l >> ./dedup.log
 	cp dedup.log dedup.log.$name
 	"""
 	}
