@@ -263,9 +263,11 @@ if (!params.skipUmi) {
 
         output:
         set val(name), file("Aligned.sortedByCoord.tagged.bam*") into dedup_in_ch
+	set val(cutname), file("cutAligned.sortedByCoord.tagged.bam*") into cutdedup_in_ch
         
         script:
         (bam, bai) = bams
+	cutname = "cut$name"
         """
         samtools idxstats $bam | cut -f 1 | grep -E 'chr|ERCC-*' > ./Aligned.sortedByCoord.idxstats.txt
         #samtools idxstats $bam | cut -f 1 | uniq > ./Aligned.sortedByCoord.idxstats.txt
@@ -274,6 +276,15 @@ if (!params.skipUmi) {
         sambamba merge -t $task.cpus ./Aligned.sortedByCoord.tagged.bam \$(find ./tmp/ | grep -E 'chr|ERCC-*')
         #sambamba merge -t $task.cpus ./Aligned.sortedByCoord.tagged.bam \$(find ./tmp/ | grep .bam)
         sambamba index -t $task.cpus ./Aligned.sortedByCoord.tagged.bam
+        rm -r ./tmp/
+	
+	cat <(samtools view -H $bam) <(samtools view $bam | cut -c2-) | samtools view -Sb > cut.bam
+	sambamba index -t $task.cpus cut.bam
+	samtools idxstats cut.bam | cut -f 1 | grep -E 'chr|ERCC-*' > ./Aligned.sortedByCoord.idxstats.txt
+	mkdir -p ./tmp/
+	python3 /opt/biorad/src/tagBamFile.py cut.bam ./Aligned.sortedByCoord.idxstats.txt ./tmp/ $task.cpus
+	sambamba merge -t $task.cpus ./Aligned.sortedByCoord.tagged.bam \$(find ./tmp/ | grep -E 'chr|ERCC-*')
+	sambamba index -t $task.cpus ./cutAligned.sortedByCoord.tagged.bam
         rm -r ./tmp/
         """
 
@@ -304,6 +315,36 @@ if (!params.skipUmi) {
 	cp dedup.log dedup.log.$name
 	"""
 	}
+	
+	process cutdeduplication {
+	// dead end process - does not pipe into subsequent processes
+	label 'high_memory'
+	label 'mid_cpu'
+	tag "rumi dedup on $name"
+	publishDir "${params.outDir}/$name/dedup", mode: 'copy'
+	
+	input:
+	set val(name), file(bams) from cutdedup_in_ch
+	
+	output:	
+	set val(name), file("rumi_dedup.sort.bam*")
+	file 'dedup.log.*'
+
+	script:
+	(bam, bai) = bams
+	"""
+	export RUST_LOG=info 
+	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU >dedup.log
+	sambamba sort -t $task.cpus ./rumi_dedup.bam -o rumi_dedup.sort.bam 
+	sambamba index -t $task.cpus ./rumi_dedup.sort.bam
+	#printf "unique_input_umi: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1,10 | wc -l >> ./dedup.log
+	printf "unique_umi: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1,10 | sort -u | wc -l >> ./dedup.log
+	cp dedup.log dedup.log.$name
+	"""
+	}
+	
 } else {
     umiTagging_ch.into { BamLong_ch} 
     report_dedup = Channel.empty()
