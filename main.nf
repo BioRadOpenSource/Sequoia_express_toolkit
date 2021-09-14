@@ -41,6 +41,7 @@ if (params.reads == "NOINPUT") {
 
 // Create Summary
 def summary = [:]
+summary['Branch'] = 'WalkingDEAD'
 summary['Run Name'] = workflow.runName
 summary['Reads'] = params.reads
 summary['Genome'] = params.genome
