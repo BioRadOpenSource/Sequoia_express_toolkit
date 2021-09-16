@@ -17,17 +17,17 @@ chrs = idxstats.read().split()
 idxstats.close()
 
 def splitBigBam(chr):
-	Itr = samfile.fetch(str(chr), multiple_iterators=True)
-	splitBam = pysam.AlignmentFile(outDir + "/" + str(chr) + ".bam", "wb", template=samfile)
-	for read in Itr:
-		spl = sorted(read.query_name.split("_"), key=len)
-		bc = spl[0]
+        Itr = samfile.fetch(str(chr), multiple_iterators=True)
+        splitBam = pysam.AlignmentFile(outDir + "/" + str(chr) + ".bam", "wb", template=samfile)
+        for read in Itr:
+                spl = sorted(read.query_name.split("_"), key=len)
+                bc = spl[0]
                 umi = spl[1]
-		rd = spl[2]
-		read.set_tag("XU", umi)
-		read.query_name = rd
-		splitBam.write(read)
-	splitBam.close()
+                rd = spl[2]
+                read.set_tag("XU", umi)
+                read.query_name = rd
+                splitBam.write(read)
+        splitBam.close()
 
 pool = Pool(processes=cpu)
 toy_out = pool.map(splitBigBam, chrs)
