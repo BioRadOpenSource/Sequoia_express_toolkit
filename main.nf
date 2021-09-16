@@ -172,7 +172,7 @@ process cutAdapt {
 	//paired end 
 	read1 = reads[0]
 	read2 = reads[1] 
-        cutter = "-u 1 -U 8"
+        cutter = "-u 1"
 	"""
     	cutadapt $cutter -m ${params.minBp} -j $task.cpus \
         -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
