@@ -22,8 +22,9 @@ def splitBigBam(chr):
 	for read in Itr:
 		spl = sorted(read.query_name.split("_"), key=len)
 		bc = spl[0]
-		rd = spl[1]
-		read.set_tag("XU", bc)
+                umi = spl[1]
+		rd = spl[2]
+		read.set_tag("XU", umi)
 		read.query_name = rd
 		splitBam.write(read)
 	splitBam.close()
