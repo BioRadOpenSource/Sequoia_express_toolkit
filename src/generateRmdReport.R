@@ -129,22 +129,22 @@ for(n in names){
 		umisObserved <- as.numeric(system(paste('grep -F "unique_umi"', file_loc, "| cut -d' ' -f2"), intern=T))
 		inputAlignments <- as.numeric(system(paste('grep "Reads In"', file_loc, "| cut -d' ' -f3"), intern=T))
 		outputAlignments <- as.numeric(system(paste('grep "Reads Out"', file_loc, "| cut -d' ' -f3"), intern=T))
-		unpaired <- as.numeric(system(paste('grep "Reads Unpaired"', file_loc, "| cut -d' ' -f3"), intern=T))
+		#unpaired <- as.numeric(system(paste('grep "Reads Unpaired"', file_loc, "| cut -d' ' -f3"), intern=T))
 		#meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
 		#maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
 		#chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ' ' -f3"), intern=T))
 		uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 		uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 
-		dedup_df <- data.frame("Total input alignments" = round((inputAlignments-unpaired)/2+unpaired),
+		dedup_df <- data.frame("Total input alignments" = inputAlignments,
 				 "Total output alignments" = outputAlignments,
 		                 "Unique UMIs observed" = umisObserved,
 				 #"Average UMIs per position" = meanUmiPerPos,
 				 #"Maximum UMIs per position" = maxUmiPerPos,
 				 #"Chimeric Reads" =chimera,
-				 "Unique Input Reads" = round((uniqInputReads-unpaired)/2+unpaired),
+				 "Unique Input Reads" = uniqInputReads,
 				 "Unique Output Reads" = uniqOutputReads,
-				 "% PCR Duplicates" = (1 - (uniqOutputReads / (((uniqInputReads-unpaired)/2)+unpaired))) * 100,
+				 "% PCR Duplicates" = (1 - (uniqOutputReads / uniqInputReads)) * 100,
 				 check.names= F)
 		dedup_df <- as.data.frame(t(dedup_df)) %>% rownames_to_column()
 		names(dedup_df) <- c("Metric", "Value")

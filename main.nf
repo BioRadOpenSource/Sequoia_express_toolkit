@@ -173,6 +173,9 @@ process cutAdapt {
 	read1 = reads[0]
 	read2 = reads[1] 
         cutter = "-u 1"
+	if(params.skipUmi){
+		cutter = cutter+" -U 8"
+	}
 	"""
     	cutadapt $cutter -m ${params.minBp} -j $task.cpus \
         -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
@@ -294,10 +297,13 @@ if (!params.skipUmi) {
 	(bam, bai) = bams
 	"""
 	export RUST_LOG=info 
-	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU >dedup.log
+	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU #>dedup.log
 	sambamba sort -t $task.cpus ./rumi_dedup.bam -o rumi_dedup.sort.bam 
 	sambamba index -t $task.cpus ./rumi_dedup.sort.bam
-	#printf "unique_input_umi: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	touch dedup.log
+	printf "Reads In: " >>./dedup.log; samtools view $bam |cut -f1| sort -u | wc -l >> ./dedup.log
+	printf "Reads Out: " >>./dedup.log; samtools view ./rumi_dedup.sort.bam |cut -f1| sort -u | wc -l >> ./dedup.log  
+	#printf "unique_input_umi: " >> ./dedup.log; samtools view $bam | cut -f16 | sort -u | wc -l >> ./dedup.log
 	printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1,16 | wc -l >> ./dedup.log
 	printf "unique_umi: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f16 | sort -u | wc -l >> ./dedup.log
 	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1,16 | sort -u | wc -l >> ./dedup.log
