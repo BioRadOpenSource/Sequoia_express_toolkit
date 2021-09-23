@@ -129,6 +129,7 @@ for(n in names){
 		umisObserved <- as.numeric(system(paste('grep -F "unique_umi"', file_loc, "| cut -d' ' -f2"), intern=T))
 		inputAlignments <- as.numeric(system(paste('grep "Reads In"', file_loc, "| cut -d' ' -f3"), intern=T))
 		outputAlignments <- as.numeric(system(paste('grep "Reads Out"', file_loc, "| cut -d' ' -f3"), intern=T))
+		uMate <- as.numeric(system(paste('grep "No Mate"', file_loc, "| cut -d' ' -f3"), intern=T))
 		#unpaired <- as.numeric(system(paste('grep "Reads Unpaired"', file_loc, "| cut -d' ' -f3"), intern=T))
 		#meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
 		#maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
@@ -142,6 +143,7 @@ for(n in names){
 				 #"Average UMIs per position" = meanUmiPerPos,
 				 #"Maximum UMIs per position" = maxUmiPerPos,
 				 #"Chimeric Reads" =chimera,
+				 "Reads with unpaired mate" = uMate,
 				 "Unique Input Reads" = uniqInputReads,
 				 "Unique Output Reads" = uniqOutputReads,
 				 "% PCR Duplicates" = (1 - (uniqOutputReads / uniqInputReads)) * 100,

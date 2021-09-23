@@ -304,6 +304,7 @@ if (!params.skipUmi) {
 	printf "Reads In: " >>./dedup.log; samtools view $bam |cut -f1| sort -u | wc -l >> ./dedup.log
 	printf "Reads Out: " >>./dedup.log; samtools view ./rumi_dedup.sort.bam |cut -f1| sort -u | wc -l >> ./dedup.log  
 	#printf "unique_input_umi: " >> ./dedup.log; samtools view $bam | cut -f16 | sort -u | wc -l >> ./dedup.log
+	printf "No Mate: " >> ./dedup.log;samtools view -F 2 $bam | cut -f1,16 | sort -u| wc -l >> ./dedup.log
 	printf "unique_input_reads: " >> ./dedup.log; samtools view -f 2 $bam | cut -f1,16 | sort -u| wc -l >> ./dedup.log
 	printf "unique_umi: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f16 | sort -u | wc -l >> ./dedup.log
 	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1,16 | sort -u | wc -l >> ./dedup.log

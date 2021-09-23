@@ -324,6 +324,7 @@ dedup_df$`Value` <- cell_spec(
     content = c("The total number of alignments passed into deduplication",
                 "The total number of alignments output after deduplication",
                 "The total number of unique UMIs observed",
+		"Number of reads from input that have no paired mate",
                 #"The average UMIs per position",
                 #"The maximum number of UMIs observed at any position",
 		#"Number of Identified Chimeric reads",
