@@ -230,7 +230,7 @@ rt$`Value` <- cell_spec(
 					"Reads written out for downstream use",
 					"The total number of bases processed in all reads",
 					"The number of bases trimmed in quality trimming",
-					"The totan number of bases written out"),
+					"The total number of bases written out"),
 		title = NULL,
 		position = "left"
 	)

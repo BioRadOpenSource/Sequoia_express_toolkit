@@ -304,3 +304,10 @@ pl
 #+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
 kable(env, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
+
+
+#' \newpage
+#' `r if(TRUE) { "# Glossary of Terms" }`
+#+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
+kable(glossary, "latex", booktabs = T) %>%
+	  kable_styling(latex_options = c("striped", "hold_position"))
