@@ -308,6 +308,22 @@ kable(env, "latex", booktabs = T) %>%
 
 #' \newpage
 #' `r if(TRUE) { "# Glossary of Terms" }`
-#+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
+#+ eval=TRUE, echo=FALSE, fig.asp=1, fig.align="left", message=F, warn=F
+
+kable(debar, "latex", booktabs = T) %>%                                                
+	          kable_styling(latex_options = c("striped", "hold_position"),full_width=F)%>%    
+		  column_spec(1, bold = T) %>%                                                    
+		  column_spec(2, width = "40em")%>%
+		  add_header_above(c("Debarcode Terms"=2))		  
+
 kable(glossary, "latex", booktabs = T) %>%
-	  kable_styling(latex_options = c("striped", "hold_position"))
+	  kable_styling(latex_options = c("striped", "hold_position"),full_width=F)%>%
+	  column_spec(1, bold = T) %>%
+	  column_spec(2, width = "40em")%>%
+	  add_header_above(c("Alignment Terms"=2))
+
+kable(dedup_terms, "latex", booktabs = T) %>%                                                   
+                 kable_styling(latex_options = c("striped", "hold_position"),full_width=F)%>%       
+	           column_spec(1, bold = T) %>%                                                       
+	            column_spec(2, width = "40em")%>%
+		add_header_above(c("Deduplication Terms"=2))		    

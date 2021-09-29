@@ -189,7 +189,7 @@ for(n in names){
 	containerInfo <- read.table("/opt/biorad/imageInfo.txt", stringsAsFactors=FALSE,sep=":")
 	write("Read imageInfo.txt", stderr())
 	containerInfo <- data.frame("rowname" = containerInfo[,1], env = containerInfo[,2], stringsAsFactors=FALSE)
-	containerInfo[3,2] <- substr(containerInfo[3,2], 1,7)
+	containerInfo[3,2] <- substr(containerInfo[3,2], 1,8)
 	anno_path <- unlist(strsplit(anno_dir,"/"))
 	referenceGenome <- anno_path[grepl("hg38|mm10|rnor6", anno_path)]
 	if(length(referenceGenome) == 0)
@@ -209,39 +209,48 @@ for(n in names){
 	#placeholder for biotype plot
 	biotype_pl = NULL
 	
-	glossary <- data.frame(
-			"Input Reads"= "The number of reads in the input FASTQ files", 
-			"Reads with Valid UMI" = "The number of R1 reads with a valid UMI" ,
-			"% Reads with Valid UMI" ="The percentage of input reads with a valid UMI" ,
-			"Reads Input" = "The number of reads input to alignment.",
-		      	"Uniquely Mapped Reads" = "The number of reads mapped to a unique genetic locus.",
-		      	"Multi-mapped Reads" = "The number of reads mapping to multiple genetic loci.",
-		      	"Reads mapped to too many loci" = "The number of reads mapping to too many genetic loci for further processing (a subset of the value listed above).",
-		      	"Unmapped Reads" = "The number of reads that did not map to the reference genome.",
-		      	"PF Bases" = "The total number of PF bases including non-aligned reads.",
-		      	"PF Aligned Bases" = "The total number of aligned PF bases. Non-primary alignments are not counted. Bases in aligned reads that do not correspond to reference (e.g. soft clips, insertions) are not counted.",
-		     	"Coding Bases" = "Number of bases in primary alignments that align to a non-UTR coding base for some gene, and not ribosomal sequence.",
-		      	"UTR Bases" = "Number of bases in primary alignments that align to a UTR base for some gene, and not a coding base.",
-		      	"Intronic Bases" = "Number of bases in primary alignments that align to an intronic base for some gene, and not a coding or UTR base.",
-		      	"Intergenic Bases" ="Number of bases in primary alignments that do not align to any gene." ,
-		      	"Ribosomal Bases" = "Number of bases in primary alignments that align to ribosomal sequence.",
-		      	"Median CV Coverage" = "The median coefficient of variation (CV) or stdev/mean for coverage values of the 1000 most highly expressed transcripts. Ideal value = 0.",
-		      	"Median 5' Bias" = "The median 5 prime bias of the 1000 most highly expressed transcripts. The 5 prime bias is calculated per transcript as: mean coverage of the 5 prime-most 100 bases divided by the mean coverage of the whole transcript.",
-		      	"Median 3' Bias" = "The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per transcript as: mean coverage of the 3 prime-most 100 bases divided by the mean coverage of the whole transcript.",
-		      	"Median 5' to 3' Bias" = "The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts.",
-		      	"% Stranded" = "The percentage of reads corresponding to transcripts which map to the correct strand of a reference genome ",
-		      	"% rRNA bases" = "Percent of aligned bases that mapped to regions encoding ribosomal RNA",
-			"Total input alignments (deduplication)" = "The total number of alignments passed into deduplication",
-			"Total output alignments (deduplication)" = "The total number of alignments output after deduplication",
-			"Unique UMIs observed" = "The total number of unique UMIs observed",
-			"Reads with unpaired mate" = "Number of reads from input that have no paired mate post alignment",
-			"Unique Input Reads" = "The number of unique input reads passed into deduplication",
-			"Unique Output Reads" = "The number of unique output reads after deduplication",
-			"% PCR Duplicates" = "The percentage of reads that are PCR duplicates ((1 - (Unique Output Reads / Unique Input Reads)) * 100)",
-			check.names= F
+	debar <- data.frame(
+		"Input Reads"	= 		"The number of reads in the input FASTQ files", 
+		"Reads with Valid UMI" = 	"The number of R1 reads with a valid UMI" ,
+		"% Reads with Valid UMI" =	"The percentage of input reads with a valid UMI",
+		check.names=F)
+		glossary <- data.frame(
+		"Reads Input" = 		"The number of reads input to alignment.",
+	      	"Uniquely Mapped Reads" = 	"The number of reads mapped to a unique genetic locus.",
+	      	"Multi-mapped Reads" = 		"The number of reads mapping to multiple genetic loci.",
+	      	"Reads mapped to too many loci"="The number of reads mapping to too many genetic loci for further processing (a subset of the value listed above).",
+	      	"Unmapped Reads" = 		"The number of reads that did not map to the reference genome.",
+	      	"PF Bases" = 			"The total number of PF bases including non-aligned reads.",
+	      	"PF Aligned Bases" = 		"The total number of aligned PF bases. Non-primary alignments are not counted. Bases in aligned reads that do not correspond to reference (e.g. soft clips, insertions) are not counted.",
+	     	"Coding Bases" = 		"Number of bases in primary alignments that align to a non-UTR coding base for some gene, and not ribosomal sequence.",
+	      	"UTR Bases" = 			"Number of bases in primary alignments that align to a UTR base for some gene, and not a coding base.",
+	      	"Intronic Bases" = 		"Number of bases in primary alignments that align to an intronic base for some gene, and not a coding or UTR base.",
+	      	"Intergenic Bases" =		"Number of bases in primary alignments that do not align to any gene." ,
+	      	"Ribosomal Bases" = 		"Number of bases in primary alignments that align to ribosomal sequence.",
+	      	"Median CV Coverage" = 		"The median coefficient of variation (CV) or stdev/mean for coverage values of the 1000 most highly expressed transcripts. Ideal value = 0.",
+	      	"Median 5' Bias" = 		"The median 5 prime bias of the 1000 most highly expressed transcripts. The 5 prime bias is calculated per transcript as: mean coverage of the 5 prime-most 100 bases divided by the mean coverage of the whole transcript.",
+	      	"Median 3' Bias" = 		"The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per transcript as: mean coverage of the 3 prime-most 100 bases divided by the mean coverage of the whole transcript.",
+	      	"Median 5' to 3' Bias" = 	"The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts.",
+	      	"% Stranded" = 			"The percentage of reads corresponding to transcripts which map to the correct strand of a reference genome ",
+	      	"% rRNA bases" = 		"Percent of aligned bases that mapped to regions encoding ribosomal RNA",
+		check.names=F)
+	dedup_terms = data.frame(	
+		
+		"Total input alignments" = "The total number of alignments passed into deduplication",
+		"Total output alignments" = "The total number of alignments output after deduplication",
+		"Unique UMIs observed" = 	"The total number of unique UMIs observed",
+		"Reads with unpaired mate" = 	"Number of reads from input that have no paired mate post alignment",
+		"Unique Input Reads" = 		"The number of unique input reads passed into deduplication",
+		"Unique Output Reads" = 	"The number of unique output reads after deduplication",
+		"% PCR Duplicates" = 		"The percentage of reads that are PCR duplicates ((1 - (Unique Output Reads / Unique Input Reads)) * 100)",
+		check.names= F
 	)
 	glossary = as.data.frame(t(glossary))
 	colnames(glossary) <-NULL
+	dedup_terms = as.data.frame(t(dedup_terms))
+	colnames(dedup_terms) <-NULL
+	debar = as.data.frame(t(debar))
+	colnames(debar) <-NULL
 
 	#Breaker ------
 	htmlReport <- paste(temp_dir, "htmlReport.R", sep="/")
