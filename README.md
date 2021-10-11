@@ -114,4 +114,9 @@ With this however your fastq files must have at a minium R1 / R2 in the file nam
 This pipeline creates output similar to those used for Sequoia Complete, each individual sample will have a report in csv, html and pdf format for ease of viewing. Additionally each batch that is run will have its own high level report that is created to have a side by side comparision of metrics as well.
 
 ## Support
-If you encounter and error / bug / issue please contact support@bio-rad.com to let us know or let us know via github so that we can address it. 
+If you encounter and error / bug / issue please contact support@bio-rad.com to let us know or let us know via github so that we can address it.
+
+### Tips and Tricks
+If you find that you are getting an error where nextflow can not find you files check your path, and if needed use an absolute path, or check the formatting on your relative path. Also check your reads have R1 / R2 (in caps) and end with .fastq or fastq.gz
+
+The pipeline runs with paried end as default (assumes you have both R1 and R2) if this is not the case you can run --seqType=SE to use just the R1 reads 
