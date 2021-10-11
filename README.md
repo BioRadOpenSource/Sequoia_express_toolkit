@@ -1,4 +1,6 @@
-# Sequoia_express_toolkit
+![Bio-Rad Laboratories](src/vendor-logo.png?raw=true "Title")
+
+# Sequoia\_express\_toolkit
 Analysis toolkit for sequoia express RNAseq kits 
 
 ## Docker enviorment

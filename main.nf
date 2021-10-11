@@ -2,7 +2,7 @@
 def paramsWithUsage = readParamsFromJsonSettings()
 
 // Constants
-acceptableGenomes = ["rnor6", "hg38", "mm10"]
+acceptableGenomes = ["rnor6", "hg38", "mm10","cust"]
 allowedSpikes     = ["ercc"]
 
 // Show help emssage
@@ -71,8 +71,6 @@ summary['Config Profile'] = workflow.profile
 log.info bioradHeader()
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "----------------------------------------------------"
-
-
 
 reads = params.reads+"*{R1,R2}*"
 
