@@ -1,5 +1,5 @@
 #' ---
-#' title: "SEQuoia Express Analysis Report"
+#' title: "RNA Sequencing Report: Sequoia Express Stranded RNA Library Analysis"
 #' output:
 #'  html_document:
 #'    toc: true

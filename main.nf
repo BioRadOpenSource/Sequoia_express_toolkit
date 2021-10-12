@@ -51,6 +51,8 @@ summary['Skip UMI?'] = params.skipUmi
 summary['Min MAPQ To Count'] = params.minMapqToCount
 summary['Output Dir'] = params.outDir
 summary['Trace Dir'] = params.tracedir
+summary['Seq Type'] = params.seqType
+summary['Clean up'] = params.tidy
 /*summary['Max Cores'] = task.cpus*/
 summary['geneId'] = geneId
 summary['sjdb GTF File'] = sjdbGTFFile
@@ -114,7 +116,7 @@ process fastQc {
 }
 //TODO: this will need an update based on where they put the UMI
 // Only extract barcodes if umiAware
-if (!params.skipUmi) {
+if (!params.skipUmi && params.seqType=="PE") {
     
     process debarcode{
 	label 'mid_cpu'
@@ -253,7 +255,7 @@ process picardAlignSummary {
     """
 }
 
-if (!params.skipUmi) {
+if (!params.skipUmi && params.seqType=="PE") {
     process umiTagging {
         label 'mid_cpu'
         label 'mid_memory'
@@ -288,7 +290,7 @@ if (!params.skipUmi) {
 	input:
 	set val(name), file(bams) from dedup_in_ch
 	output:	
-	set val(name), file("rumi_dedup.sort.bam*") into BamLong_ch
+	set val(name), file("rumi_dedup.sort.bam*").set{ BamLong_ch}
 	file 'dedup.log.*' into report_dedup, meta_dedup
 
 	script:
@@ -310,7 +312,7 @@ if (!params.skipUmi) {
 	"""
 	}
 } else {
-    umiTagging_ch.into { BamLong_ch} 
+    umiTagging_ch.set{ BamLong_ch } 
     report_dedup = Channel.empty()
     meta_dedup = Channel.empty()
 }
@@ -418,6 +420,7 @@ process assembleReport {
     file '*_htmlReport.html'
     file '*_pdfReport.pdf'
     file '*_csvReport.csv'
+    val "done" into report_complete
     
     script:
     """
@@ -443,6 +446,8 @@ process combinedXLS{
 
 	output:
 	file "readcount_report.xlsx"
+	val "done" into xls_complete
+	
 	
 	script:
 	"""
@@ -464,7 +469,8 @@ process metaReport{
 	file 'batch_summary.csv'
 	file 'batch_summary.html'
 	file 'batch_summary.pdf'
-	val "done" into clean_workspace
+	val "done" into meta_complete
+	
 	script:	
 	"""
 	mkdir -p tmp/
@@ -477,13 +483,22 @@ process metaReport{
 }
 if(params.tidy == true){
 	process tidy_up{
-		input: val x from clean_workspace
+		afterScript 'bash /opt/biorad/src/cleanup.sh "${workflow.workDir}"'
 
+		input: 
+		val m from meta_complete
+		val r from report_complete
+		val x from xls_complete
 		
+		script:
 		"""
-		 rm -r ${workflow.workDir}
+		
+		echo "${workflow.workDir}"
 		""" 
 
+	}
+	workflow.onComplete{
+		clean
 	}
 }
 

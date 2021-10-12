@@ -180,7 +180,7 @@ for(n in names){
 
 	}
 
-	env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+	env <- Sys.getenv(c("Sample Name","FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
 	env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
 	umi_tools_version <- system("rumi -V", intern=T)
 	umi_tools_version <- strsplit(umi_tools_version, " ")[[1]][2]
@@ -201,7 +201,7 @@ for(n in names){
 	anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), comment.char="", fill=T, sep=",")
 	write("Read annotation_version", stderr())
 	anno_source <- gsub("#!annotation-source ", "", anno_version$V1[grep("annotation-source", anno_version$V1)])
-	localVars <- data.frame(rowname = c("Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
+	localVars <- data.frame(rowname = c("Sample Name","Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(n,referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
 	env <- rbind(containerInfo, localVars, env)
 	env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
 	colnames(env) <- NULL

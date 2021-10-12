@@ -1,12 +1,18 @@
 #' ---
 #' title: |
-#'   | \vspace{2cm} \LARGE{SEQuoia Express Analysis Report}
+#'   | \vspace{2cm} \LARGE{RNA Sequencing Report}
+#'   | \vspace{1cm} {SEQuoia Express Stranded RNA Library Analysis}
 #' header-includes:
 #' - \usepackage{titling}
 #' - \usepackage{fontspec}
 #' - \setmainfont{FreeSans}
 #' - \usepackage{booktabs}
 #' - \usepackage[table]{xcolor}
+#' - \usepackage{fancyhdr}
+#' - \pagestyle{fancy}
+#' - \fancyhead[CO,CE]{Bio-Rad Laboratories}
+#' - \fancyfoot[CO,CE]{SEQuoia Express Analysis Report}
+#' - \fancyfoot[LE,RO]{\thepage}
 #' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
 #' - \posttitle{\end{center}\newpage}
 #' output: 
@@ -23,6 +29,7 @@
 
 #+ setup, include=FALSE
 
+
 #basics
 library(knitr)
 library(kableExtra)
@@ -37,6 +44,9 @@ library(rlist)
 #muting warnings
 options(warn=-1)
 
+#' \newpage
+
+#+ echo=FALSE, fig.asp=1, fig.align="center", message=F
 #setwd("/")
 #dictate kable styling options
 kableStyle <- c("striped", "condensed", "hover", "responsive")
@@ -150,11 +160,11 @@ if (length(r2) > 0) {
 }
 
 #' `r if(exists("p1")) { "## Read 1" }`
-#+ eval=exists("p1"), echo=FALSE, fig.asp=1, fig.align="center", message=F
+#+ eval=exists("p1"), echo=FALSE, fig.asp=.7, fig.align="center", message=F
 p1
 
 #' `r if(exists("p2")) { "## Read 2" }`
-#+ eval=exists("p2"), echo=FALSE, fig.asp=1, fig.align="center", message=F
+#+ eval=exists("p2"), echo=FALSE, fig.asp=.7, fig.align="center", message=F
 p2
 
 #' \newpage
@@ -175,7 +185,11 @@ pl <- plot_ly(dfx, x = ~valid, y = ~" ", type = "bar", name="Valid", orientation
 
 #create plot
 pl
+
+"Distriubtion of UMIs through sample valid vs invalid"
+
 }
+
 #' \newpage
 
 #' `r if(trimDirExists) { "# Read Trimming" }`
@@ -198,8 +212,6 @@ rt$Value <- prettyNum(rt$Value, big.mark = ",", scientific = F) #this is gross, 
 kable(rt, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
-
-#' \newpage
 
 #' `r if(alignmentDirExists) { "# Alignment" }`
 #+ eval=alignmentDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F
@@ -230,14 +242,16 @@ rt_cov <- read.table(paste0(alignmentDir, "/rna_metrics.txt.",n), skip = 10, hea
 cov <- plot_ly(width = 700) %>% 
   layout(
     yaxis = list(title = "Normalized Coverage", range = c(0, max(rt_cov$All_Reads.normalized_coverage+0.1*rt_cov$All_Reads.normalized_coverage))),
-    xaxis = list(title = "Normalized Position",
-                 tickvals = seq(0, 100, by=2),
+    xaxis = list(title = "Normalized Position (5' to 3')",
+                 tickvals = seq(0, 100, by=5),
                  tickmode = "array",
-                 ticktext = seq(0, 100, by=2),
+                 ticktext = seq(0, 100, by=5),
                  tickangle = 90,
                  ticks = "outside"))
 
 cov <- add_trace(cov, x = ~c(1:101), y = rt_cov$All_Reads.normalized_coverage, type = 'scatter', mode ='lines')
+
+"The coverage of a transcript position normalized for the coverage of that transcript"
 
 #' \newpage
 
@@ -259,7 +273,7 @@ dedup_df$Value <- prettyNum(dedup_df$Value, big.mark = ",", scientific=FALSE)
 kable(dedup_df, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
-#' \newpage
+#' \pagebreak
 
 #' `r if(countsDirExists) { "# Transcriptome" }`
 #+ eval=countsDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
@@ -283,7 +297,7 @@ pl <- plot_ly(plot_by_biotype, x=~Biotype, y=~Count, type='bar')
 
 #render tables and plots on separate pages
 
-#' `r if(exists("longRNAcounts")) { "## longRNA Counts" }`
+#' `r if(exists("longRNAcounts")) { "## RNA Counts" }`
 #+ eval=exists("longRNAcounts"), echo=FALSE, fig.asp=1, fig.align="center", message=F
 kable(longRNAcounts, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
@@ -314,16 +328,16 @@ kable(debar, "latex", booktabs = T) %>%
 	          kable_styling(latex_options = c("striped", "hold_position"),full_width=F)%>%    
 		  column_spec(1, bold = T) %>%                                                    
 		  column_spec(2, width = "40em")%>%
-		  add_header_above(c("Debarcode Terms"=2))		  
+		  add_header_above(c("Debarcode Metric"=1, "Definition"=1))		  
 
 kable(glossary, "latex", booktabs = T) %>%
 	  kable_styling(latex_options = c("striped", "hold_position"),full_width=F)%>%
 	  column_spec(1, bold = T) %>%
 	  column_spec(2, width = "40em")%>%
-	  add_header_above(c("Alignment Terms"=2))
+	  add_header_above(c("Alignment Metrics"=1, "Definition"=1))
 
 kable(dedup_terms, "latex", booktabs = T) %>%                                                   
                  kable_styling(latex_options = c("striped", "hold_position"),full_width=F)%>%       
 	           column_spec(1, bold = T) %>%                                                       
 	            column_spec(2, width = "40em")%>%
-		add_header_above(c("Deduplication Terms"=2))		    
+		add_header_above(c("Deduplication Metrics"=1, "Definition"=1))		    
