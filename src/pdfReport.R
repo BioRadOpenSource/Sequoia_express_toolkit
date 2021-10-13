@@ -10,7 +10,7 @@
 #' - \usepackage[table]{xcolor}
 #' - \usepackage{fancyhdr}
 #' - \pagestyle{fancy}
-#' - \fancyhead[CO,CE]{Bio-Rad Laboratories}
+#' - \fancyhead[CO,CE]{Bio-Rad Laboratories \includegraphics[width=5cm]{/opt/biorad/src/vendor-logo.png}}
 #' - \fancyfoot[CO,CE]{SEQuoia Express Analysis Report}
 #' - \fancyfoot[LE,RO]{\thepage}
 #' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
@@ -160,17 +160,17 @@ if (length(r2) > 0) {
 }
 
 #' `r if(exists("p1")) { "## Read 1" }`
-#+ eval=exists("p1"), echo=FALSE, fig.asp=.7, fig.align="center", message=F
+#+ eval=exists("p1"), echo=FALSE, fig.asp=.5, fig.align="center", message=F
 p1
 
 #' `r if(exists("p2")) { "## Read 2" }`
-#+ eval=exists("p2"), echo=FALSE, fig.asp=.7, fig.align="center", message=F
+#+ eval=exists("p2"), echo=FALSE, fig.asp=.5, fig.align="center", message=F
 p2
 
 #' \newpage
 
 #' `r if(debarcodeDirExists) { "# UMI Parsing" }`
-#+ eval=debarcodeDirExists, echo=FALSE, fig.width=8, fig.height=5, fig.align="left"
+#+ eval=debarcodeDirExists, echo=FALSE, fig.width=8, fig.height=5, fig.align="left", comment=NA 
 if(debarcodeDirExists){
 
 #create kable output
@@ -186,7 +186,7 @@ pl <- plot_ly(dfx, x = ~valid, y = ~" ", type = "bar", name="Valid", orientation
 #create plot
 pl
 
-"Distriubtion of UMIs through sample valid vs invalid"
+cat('Distriubtion of UMIs through sample valid vs invalid')
 
 }
 
@@ -251,13 +251,12 @@ cov <- plot_ly(width = 700) %>%
 
 cov <- add_trace(cov, x = ~c(1:101), y = rt_cov$All_Reads.normalized_coverage, type = 'scatter', mode ='lines')
 
-"The coverage of a transcript position normalized for the coverage of that transcript"
-
 #' \newpage
 
 #' `r if(exists("cov")) { "## Transcript Coverage" }`
-#+ eval=exists("cov"), echo=FALSE, fig.asp=1, fig.align="center", message=F
+#+ eval=exists("cov"), echo=FALSE, fig.asp=1, fig.align="center", message=F, comment=NA 
 cov
+cat('The coverage of a transcript position normalized for the coverage of that transcript')
 
 #' \newpage
 
@@ -273,10 +272,9 @@ dedup_df$Value <- prettyNum(dedup_df$Value, big.mark = ",", scientific=FALSE)
 kable(dedup_df, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
-#' \pagebreak
 
 #' `r if(countsDirExists) { "# Transcriptome" }`
-#+ eval=countsDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
+#+ eval=countsDirExists, echo=FALSE, fig.asp=.5, fig.align="center", message=F, warn=F
 #parse genecounts summary for longRNA
 #create plot with labels above bars; plotly handles autoscaling
 
