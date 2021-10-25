@@ -290,7 +290,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 	input:
 	set val(name), file(bams) from dedup_in_ch
 	output:	
-	set val(name), file("rumi_dedup.sort.bam*").set{ BamLong_ch}
+	set val(name), file("rumi_dedup.sort.bam*") into  BamLong_ch
 	file 'dedup.log.*' into report_dedup, meta_dedup
 
 	script:
