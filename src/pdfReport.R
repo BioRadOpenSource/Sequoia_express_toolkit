@@ -10,10 +10,10 @@
 #' - \usepackage[table]{xcolor}
 #' - \usepackage{fancyhdr}
 #' - \pagestyle{fancy}
-#' - \fancyhead[CO,CE]{Bio-Rad Laboratories \includegraphics[width=5cm]{/opt/biorad/src/vendor-logo.png}}
+#' - \fancyhead[CO,CE]{\includegraphics[width=3cm]{/opt/biorad/src/vendor-logo.png}}
 #' - \fancyfoot[CO,CE]{SEQuoia Express Analysis Report}
 #' - \fancyfoot[LE,RO]{\thepage}
-#' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
+#' - \pretitle{\vspace{7cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
 #' - \posttitle{\end{center}\newpage}
 #' output: 
 #'   pdf_document:
