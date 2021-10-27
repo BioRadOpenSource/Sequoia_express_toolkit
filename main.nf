@@ -2,7 +2,7 @@
 def paramsWithUsage = readParamsFromJsonSettings()
 
 // Constants
-acceptableGenomes = ["rnor6", "hg38", "mm10","cust"]
+acceptableGenomes = ["rnor6", "hg38", "mm10","tair10","R64-1-1","dm3","danRer7","ce10"]
 allowedSpikes     = ["ercc"]
 
 // Show help emssage
