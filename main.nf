@@ -176,6 +176,9 @@ process cutAdapt {
 	if(params.skipUmi){
 		cutter = cutter+" -U 8"
 	}
+	if(params.noTrim){
+		cutter = ""
+	}
 	"""
     	cutadapt $cutter -m ${params.minBp} -j $task.cpus \
         -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
