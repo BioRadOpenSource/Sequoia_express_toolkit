@@ -76,8 +76,8 @@ for( f in files){
 	uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 	#chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ' ' -f3"), intern=T))
 	#unpaired <- as.numeric(system(paste('grep "Reads Unpaired"', file_loc, "| cut -d' ' -f3"), intern=T))
-	umate = as.numeric(system(paste('grep "No Mate"', file_loc, "| cut -d' ' -f3"), intern=T))
-	pcr_dup = round((1 - (uniqOutputReads /uniqInputReads) * 100),digits=2)
+	uMate = as.numeric(system(paste('grep "No Mate"', file_loc, "| cut -d' ' -f3"), intern=T))
+	pcr_dup = round(((1 - (uniqOutputReads /uniqInputReads)) * 100),digits=2)
 	df = data.frame(Results=c(
 			inputAlignments,
 			outputAlignments,
