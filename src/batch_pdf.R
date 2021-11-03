@@ -52,7 +52,7 @@ kable(report_frame,  "latex", booktabs = T) %>%
 	kable_styling(latex_options = c("striped", "hold_position"))
 
 #' \newpage
-#' `r if(dedupDirExists) {"# Summary Alignment Report"}`
+#' `r if(dedupDirExists) {"# Deduplication Report"}`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
 kable(dedup_frame,  "latex", booktabs = T) %>% 
 	kable_styling(latex_options = c("striped", "hold_position"))
