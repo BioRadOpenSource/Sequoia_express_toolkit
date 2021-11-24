@@ -170,7 +170,7 @@ p2
 #' \newpage
 
 #' `r if(debarcodeDirExists) { "# UMI Parsing" }`
-#+ eval=debarcodeDirExists, echo=FALSE, fig.width=8, fig.height=5, fig.align="left", comment=NA 
+#+ eval=debarcodeDirExists, echo=FALSE, fig.width=8, fig.height=5, fig.align="left"
 if(debarcodeDirExists){
 
 #create kable output
@@ -186,6 +186,11 @@ pl <- plot_ly(dfx, x = ~valid, y = ~" ", type = "bar", name="Valid", orientation
 #create plot
 pl
 
+}                                                         
+                                                          
+#' `r if(debarcodeDirExists) { }`                         
+#+ eval=debarcodeDirExists, echo=FALSE,  comment=NA       
+{                                                         
 cat('Distriubtion of UMIs through sample valid vs invalid')
 
 }
