@@ -7,7 +7,13 @@
 #' - \setmainfont{FreeSans}
 #' - \usepackage{booktabs}
 #' - \usepackage[table]{xcolor}
+#' - \usepackage{fancyhdr}  
 #' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
+#' - \pagestyle{fancy}                                                                                                
+#' - \fancyhead[CO,CE]{\includegraphics[width=3cm]{/opt/biorad/src/vendor-logo.png}}                                  
+#' - \fancyfoot[CO,CE]{SEQuoia Express Batch Report}       
+#' - \fancyfoot[LE,RO]{\thepage}                                                                                      
+#' - \pretitle{\vspace{7cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}                                                                                                             
 #' - \posttitle{\end{center}\newpage}
 #' output: 
 #'   pdf_document:
