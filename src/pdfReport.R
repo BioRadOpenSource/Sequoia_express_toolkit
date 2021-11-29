@@ -174,8 +174,8 @@ p2
 if(debarcodeDirExists){
 
 #create kable output
-kable(deb_df, "latex", booktabs = T) %>%
-  kable_styling(latex_options = c("striped", "hold_position"))
+#kable(deb_df, "latex", booktabs = T) %>%
+#  kable_styling(latex_options = c("striped", "hold_position"))
 
 #plotly
 dfx <- data.frame(" "="barcode", "valid"=validBcReads, "invalid"=inputReads-validBcReads)
@@ -186,14 +186,28 @@ pl <- plot_ly(dfx, x = ~valid, y = ~" ", type = "bar", name="Valid", orientation
 #create plot
 pl
 
+#create kable output
+#kable(deb_df, "latex", booktabs = T) %>%
+#	  kable_styling(latex_options = c("striped", "hold_position"))
+
+
 }                                                         
                                                           
 #' `r if(debarcodeDirExists) { }`                         
 #+ eval=debarcodeDirExists, echo=FALSE,  comment=NA       
-{                                                         
-cat('Distriubtion of UMIs through sample valid vs invalid')
-
+if(debarcodeDirExists){ 
+#create kable output
+deb_df$Value <- prettyNum(deb_df$Value, big.mark = ",", scientific = F)
+kable(deb_df, "latex", booktabs = T) %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
 }
+
+#' `r if(debarcodeDirExists) { }`                   
+#+ eval=debarcodeDirExists, echo=FALSE,  comment=NA 
+if(debarcodeDirExists){ 
+cat('Distriubtion of UMIs through sample valid vs invalid')
+}
+
 
 #' \newpage
 
