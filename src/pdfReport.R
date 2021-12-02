@@ -314,7 +314,7 @@ pl <- plot_ly(plot_by_biotype, x=~Biotype, y=~Count, type='bar')
 
 #render tables and plots on separate pages
 
-#' `r if(exists("longRNAcounts")) { "## RNA Counts" }`
+#' `r if(exists("longRNAcounts")) { "## RNA Counts Summary Appendix" }`
 #+ eval=exists("longRNAcounts"), echo=FALSE, fig.asp=1, fig.align="center", message=F
 kable(longRNAcounts, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
