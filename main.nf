@@ -335,6 +335,7 @@ process count_rna {
     val(name) into (counts_name, xls_name, threshold_name)
     file "gene_counts_longRNA*" into (counts_ch, counts_xls, count_threshold_ch)
     file "*.$name" into report_longRNACounts
+    file "*.featureCounts.bam"
 
     script:
     strand = params.reverseStrand ? "-s 2" : "-s 1"
