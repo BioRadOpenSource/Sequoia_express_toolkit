@@ -53,24 +53,26 @@ md5sum -c ./*/*.chk
 For the majority of users there are only some basic commands that will need to be done but for a full list of options please see the nextflow.config file, using `nextflow run main.nf --help` will only lis the basic options at the moment enough to get a basic run started. 
 
 #### Generate the Docker Image
-This pipeline uses a docker conainer as a virtual enviorment to run the software as OS agnostic as possible. So outside of installing docker and nextflow no other software is required. To use this docker container one can simply build it from the included Dockerfile. Some of the repos at the time of development are not public and may not be able to be created and you may be required to use the second docker pull method to use this toolkit.
+This pipeline uses a docker conainer as a virtual enviorment to run the software as OS agnostic as possible. So outside of installing docker and nextflow no other software is required. The reccomendation for running this analysis is to pull the docker container from dockerhub. However should the user choose to modify the docker container for a customized analysis the Dockerfile is provided for ease of building. 
 
-```
-docker build -t bioraddbg/sequoia-express [path to Dockerfile] --build-arg GITHUB_TOKEN=[your token here]
-
-```
-Alernatively this Dockerfile will also be created and pushed after finalization to dockerhub, where it can be pulled directly with no extra fuss. (Recommended) 
+(Recommended) the container should be pulled automatically by nextflow, however this is the command required if needed: 
 
 ```
 docker pull -t bioraddbg/sequoia-express:latest
 ```
 
+For the custom analysis described above the following command will generate a docker container for the analysis:
+
+```
+docker build -t bioraddbg/sequoia-express [path to Dockerfile]
+```
+
 #### Running the pipeline for analysis with nextflow 
 
 #### Typical Usage:
-```
-nextflow run . --reads './tests/*_R{1,2}.fastq.gz' --genome hg38 --outDir /data/out --skipUmi --genomes_base /mnt/genome-annotations
 
+```
+nextflow run Sequoia_express_toolkit/main.nf  --outDir ./output/ --reads '~/read/express/' --genome hg38 --genomes_base ./genomes/
 ```
 #### Help
 ```
@@ -90,8 +92,7 @@ $ nextflow main.nf --help
 Usage:
 
 The typical command for running the pipeline is as follows:
-nextflow run . --reads './tests/*_R{1,2}.fastq.gz' --genome hg38 --outDir /data/out --skipUmi --genomes_base /mnt/gen
-ome-annotations
+nextflow run Sequoia_express_toolkit/main.nf  --outDir ./output/ --reads '~/read/express/' --genome hg38 --genomes_base ./genomes/
 
 Args:
 

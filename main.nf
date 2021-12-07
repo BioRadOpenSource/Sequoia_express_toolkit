@@ -549,7 +549,7 @@ def helpMessage(paramsWithUsage) {
     Usage:
 
     The typical command for running the pipeline is as follows:
-    nextflow run . --reads './tests/*_R{1,2}.fastq.gz' --genome hg38 --outDir /data/out --skipUmi --genomes_base /mnt/genome-annotations
+    nextflow run Sequoia_express_toolkit/main.nf  --outDir ./output/ --reads '~/read/express/' --genome hg38 --genomes_base ./genomes/
 
     Args:
 
