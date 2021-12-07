@@ -1,15 +1,15 @@
 ![Bio-Rad Laboratories](src/vendor-logo.png?raw=true "Title")
 
-# Sequoi Express Toolkit
+# Sequoia Express Toolkit
 Analysis toolkit for Sequoia Express RNAseq kits 
 
-## Docker enviorment
-To use the toolkit a virtual enviorement is required to run the software, prepared here as a docker container. To use please ensure docker is both installed and running. Either generate (via docker build) or retieve (docker pull) the container to continue. Future state as the container is made available publically nextflow will be able pull the container automatically.
+## Docker Enviorment
+To use the toolkit a virtual enviorement is required to run the software, prepared here as a docker container. To use please ensure docker is both installed and running. Either generate (via docker build) or retieve (docker pull) the container to continue. Please note that that nextflow can call docker directly and will be able to pull the container automatically.
 
 ## Analysis via Nextflow
-Nextlfow is the primary software the runs and coodinates the pipeline (groovy / Java language base) so you will need Java 8 or higher with nextflow installed to run.
+Nextflow is the primary software the runs and coodinates the pipeline (groovy / Java language base) so you will need Java 8 or higher with nextflow installed to run.
 
-### Installing nextflow 
+### Installing Nextflow 
 ```
 wget -qO- https://get.nextflow.io | bash
 #or
@@ -19,6 +19,19 @@ If you are more comfortable with conda it can also be done there.
 ```
 conda install -c bioconda nextflow
 ```
+
+### Cleanup the Work Directory
+When running the toolkit, nextflow will produce intermediate files required to complete the processes. To do this please follow the instuctions from nextflow. There are options to keep the logs or to do as part of a run after complete. 
+One example would be:
+```
+nexflow clean -f ./work
+
+```
+for the full options:
+```
+nextflow clean -h 
+```
+
 
 ### Downloading Refernce Genomes
 The reference genomes are stored in S3 for convenience. As of this writing. The reference genome can be found here: s3://dbg-cloudpipeline-data-us-west-2-prod/ref\_data/sequoia\_analysis/latest/.
@@ -39,24 +52,25 @@ md5sum -c ./*/*.chk
 ### Running the pipeline 
 For the majority of users there are only some basic commands that will need to be done but for a full list of options please see the nextflow.config file, using `nextflow run main.nf --help` will only lis the basic options at the moment enough to get a basic run started. 
 
-#### Generate the docker image needed for the virtual enviorment
-This pipeline uses a docker conainer as a virtual enviorment to run the software as OS agnostic as possible. So outside of intsalling docker and nextflow no other software is required. To use this docker container one can simply build it from the included docker file. Some of the repos at the time of development are not public and maynot be able to be created and you maybe required to use the second docker pull method to use this toolkit.
+#### Generate the Docker Image
+This pipeline uses a docker conainer as a virtual enviorment to run the software as OS agnostic as possible. So outside of installing docker and nextflow no other software is required. To use this docker container one can simply build it from the included Dockerfile. Some of the repos at the time of development are not public and may not be able to be created and you may be required to use the second docker pull method to use this toolkit.
 
 ```
-Docker build -t bioraddbg/sequoia-express [path to Dockerfile] --build-arg GITHUB_TOKEN=[your token here]
+docker build -t bioraddbg/sequoia-express [path to Dockerfile] --build-arg GITHUB_TOKEN=[your token here]
 
 ```
-Alernatively this docker file will also be created and pushed after finalization to dockerhub, where it can be pulled directly with no extra fuss. (Recommended) 
+Alernatively this Dockerfile will also be created and pushed after finalization to dockerhub, where it can be pulled directly with no extra fuss. (Recommended) 
 
 ```
-Docker pull -t bioraddbg/sequoia-express:latest
+docker pull -t bioraddbg/sequoia-express:latest
 ```
 
 #### Running the pipeline for analysis with nextflow 
 
 #### Typical Usage:
 ```
-nextflow run repos/Sequoia_express_toolkit/main.nf  --outDir ./output/express --reads ./data/ --genome hg38 --genomes_base ./genome/ --max_cpus 16 --max_memory 60 -with-docker bioraddbg/sequoia-express:latest -resume --seqType="PE"
+nextflow run . --reads './tests/*_R{1,2}.fastq.gz' --genome hg38 --outDir /data/out --skipUmi --genomes_base /mnt/genome-annotations
+
 ```
 #### Help
 ```
@@ -114,9 +128,9 @@ With this however your fastq files must have at a minium R1 / R2 in the file nam
 This pipeline creates output similar to those used for Sequoia Complete, each individual sample will have a report in csv, html and pdf format for ease of viewing. Additionally each batch that is run will have its own high level report that is created to have a side by side comparision of metrics as well.
 
 ## Support
-If you encounter and error / bug / issue please contact support@bio-rad.com to let us know or let us know via github so that we can address it.
+If you encounter an error / bug / issue please contact support@bio-rad.com to let us know or let us know via github so that we can address it.
 
 ### Tips and Tricks
 If you find that you are getting an error where nextflow can not find you files check your path, and if needed use an absolute path, or check the formatting on your relative path. Also check your reads have R1 / R2 (in caps) and end with .fastq or fastq.gz
 
-The pipeline runs with paried end as default (assumes you have both R1 and R2) if this is not the case you can run --seqType=SE to use just the R1 reads 
+The pipeline runs with paired end as default (assumes you have both R1 and R2) if this is not the case you can run --seqType=SE to use just the R1 reads 
