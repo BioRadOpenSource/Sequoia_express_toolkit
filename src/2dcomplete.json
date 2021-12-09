@@ -1,0 +1,9 @@
+{
+	"primary_fastq": 1,
+	"sequences": [
+		{
+			"type": "Umi",
+			"length": 8
+		}
+	]
+}
