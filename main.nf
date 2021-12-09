@@ -263,7 +263,7 @@ if (!params.skipUmi && params.seqType=="PE") {
         label 'mid_cpu'
         label 'mid_memory'
         tag "umiTagging on $name"
-        publishDir "${params.outDir}/$name/umiTagging", mode: 'copy'
+        //publishDir "${params.outDir}/$name/umiTagging", mode: 'copy'
         input:
         set val(name) , file(bams) from umiTagging_ch
 
