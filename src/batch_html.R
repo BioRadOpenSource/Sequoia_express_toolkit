@@ -55,7 +55,7 @@ datatable(align_frame, rownames=F, options=list(pageLength=20))
 #' `r {"# Summary Alignment Report {.tabset .tabset-fade .tabset-pills}"}`
 datatable(report_frame, rownames=F, options=list(pageLength=20))
 
-#' `r if(dedupDirExists) {"# Summary Deduplicationt Statstistics {.tabset .tabset-fade .tabset-pills}"}`
+#' `r if(dedupDirExists) {"# Summary Deduplication Statstistics {.tabset .tabset-fade .tabset-pills}"}`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, results="asis", warn=F
 datatable(dedup_frame, rownames=F, options=list(pageLength=20))
 

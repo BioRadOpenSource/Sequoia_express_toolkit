@@ -2,7 +2,7 @@
 def paramsWithUsage = readParamsFromJsonSettings()
 
 // Constants
-acceptableGenomes = ["rnor6", "hg38", "mm10"]
+acceptableGenomes = ["rnor6", "hg38", "mm10","tair10","R64-1-1","dm3","danRer7","ce10"]
 allowedSpikes     = ["ercc"]
 
 // Show help emssage
@@ -51,6 +51,8 @@ summary['Skip UMI?'] = params.skipUmi
 summary['Min MAPQ To Count'] = params.minMapqToCount
 summary['Output Dir'] = params.outDir
 summary['Trace Dir'] = params.tracedir
+summary['Seq Type'] = params.seqType
+summary['Clean up'] = params.tidy
 /*summary['Max Cores'] = task.cpus*/
 summary['geneId'] = geneId
 summary['sjdb GTF File'] = sjdbGTFFile
@@ -72,8 +74,6 @@ log.info bioradHeader()
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "----------------------------------------------------"
 
-
-
 reads = params.reads+"*{R1,R2}*"
 
 Channel
@@ -81,7 +81,7 @@ Channel
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .set { read_files}
 
-read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation}
+read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation; raw_reads_dead}
 // Begin Processing
 
 if (params.validateInputs) {
@@ -116,40 +116,31 @@ process fastQc {
 }
 //TODO: this will need an update based on where they put the UMI
 // Only extract barcodes if umiAware
-if (!params.skipUmi) {
+if (!params.skipUmi && params.seqType=="PE") {
+    
     process debarcode{
-        label 'mid_cpu'
-        tag "debarcode on $sample_id"
-        publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
+	label 'mid_cpu'
+	label 'mid_mem'
+	tag "debarcode DEAD on $sample_id"
+	publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
 
-        input:
-        set sample_id, file(reads) from raw_reads
+	input:
+	set sample_id, file(reads) from raw_reads
+	output:
+	set val(sample_id), file("*.fastq.gz") into debarcoded_ch
+	file("*stats.tsv") into report_debarcode  
 
-        output:
-        set val(sample_id), file('*.fastq.gz') into debarcoded_ch
-        file 'debarcode_stats.txt.*' into report_debarcode
-
-        script:
-	if(params.seqType == "SE"){
-		reads = "$reads $reads"
+	script:
+	"""
+	export RUST_LOG=info	
+	dead -c /opt/biorad/src/2dcomplete.json -a DefaultParser -o ./ -i $sample_id $reads
+	"""
 	}
-	
-	umiLoc = params.umiType.toLowerCase()
-        """
-        bash /opt/biorad/src/fastq_to_tsv.sh $reads \
-            | parallel --pipe python3 /opt/biorad/src/debarcode_${umiLoc}.py \
-            | tee >(awk '/^MM/{bad=bad+1}/^@/{good=good+1}END{print "Total Reads: " good + bad; print "Good Reads: " good; print "Bad Reads: " bad}' > debarcode_stats.txt) \
-            | grep -ve '^MM' \
-            | bash /opt/biorad/src/tsv_to_fastq.sh ${sample_id}_debarcoded_R1.fastq.gz ${sample_id}_debarcoded_R2.fastq.gz compress
-	mv debarcode_stats.txt debarcode_stats.txt.$sample_id
-        """
-    }
 } else {
     debarcoded_ch = raw_reads
     report_debarcode = Channel.empty()
 }
 
-// TODO this needs updates from 2D complete as it only uses R1 but there could be an R2 
 process cutAdapt {
     label 'mid_cpu'
     tag "cutAdapt on $name"
@@ -170,10 +161,6 @@ process cutAdapt {
 
 	if (params.seqType == "SE") {
 	read1 = reads[0]
-		if(params.umiType.toLowerCase() == "b" && !params.noTrim){
-			cutter = "-u 9"
-		}
-		//single end with UMI on R1
     	"""
    	 cutadapt $cutter -m ${params.minBp} -j $task.cpus \
              -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
@@ -185,16 +172,17 @@ process cutAdapt {
 	//paired end 
 	read1 = reads[0]
 	read2 = reads[1] 
-	if(params.umiType.toLowerCase() == "b" && !params.noTrim){
-                        cutter = "-u 9"
-                }
-	if(params.umiType.toLowerCase() == "c" && !params.noTrim){
-                        cutter = "-u 1 -U 8"
-                }
+        cutter = "-u 1"
+	if(params.skipUmi){
+		cutter = cutter+" -U 8"
+	}
+	if(params.noTrim){
+		cutter = ""
+	}
 	"""
     	cutadapt $cutter -m ${params.minBp} -j $task.cpus \
-             -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
-             -o trimmed_R1.fastq.gz -p trimmed_R2.fastq.gz $read1 $read2 1> trimlog.log
+        -q $params.fivePrimeQualCutoff,$params.threePrimeQualCutoff \
+        -o trimmed_R1.fastq.gz -p trimmed_R2.fastq.gz $read1 $read2 1> trimlog.log
     	mv trimlog.log trimlog.log.$name
     	"""
 
@@ -270,12 +258,12 @@ process picardAlignSummary {
     """
 }
 
-if (!params.skipUmi) {
+if (!params.skipUmi && params.seqType=="PE") {
     process umiTagging {
         label 'mid_cpu'
         label 'mid_memory'
         tag "umiTagging on $name"
-        publishDir "${params.outDir}/$name/umiTagging", mode: 'copy'
+        //publishDir "${params.outDir}/$name/umiTagging", mode: 'copy'
         input:
         set val(name) , file(bams) from umiTagging_ch
 
@@ -297,38 +285,37 @@ if (!params.skipUmi) {
 
     }
     process deduplication {
-        label 'high_memory'
-        label 'mid_cpu'
-        tag "dedup on $name"
-        publishDir "${params.outDir}/$name/dedup", mode: 'copy'
+	label 'high_memory'
+	label 'mid_cpu'
+	tag "rumi dedup on $name"
+	publishDir "${params.outDir}/$name/dedup", mode: 'copy'
+	
+	input:
+	set val(name), file(bams) from dedup_in_ch
+	output:	
+	set val(name), file("rumi_dedup.sort.bam*") into  BamLong_ch
+	file 'dedup.log.*' into report_dedup, meta_dedup
 
-        input:
-        set val(name), file(bams) from dedup_in_ch
-
-        output:
-        set val(name), file("Aligned.sortedByCoord.deduplicated.out.bam*") into BamLong_ch
-        file 'dedup.log.*' into report_dedup, meta_dedup
-
-        script:
-        (bam, bai) = bams
-	paired = "--paired"
-	if (params.seqType == "SE") {
-		paired=""
-	}
-        """
-        mkdir -p ./deduplicated
-        umi_tools dedup -I $bam --output-stats=./deduplicated \
-        --method unique --log ./dedup.log \
-        --extract-umi-method=tag --umi-tag=XU $paired\
-        > ./Aligned.sortedByCoord.deduplicated.out.bam
-        sambamba index -t $task.cpus ./Aligned.sortedByCoord.deduplicated.out.bam
-        printf "unique_input_reads: " >> ./dedup.log; samtools view $bam | cut -f1 | sort -u | wc -l >> ./dedup.log
-        printf "unique_output_reads: " >> ./dedup.log; samtools view ./Aligned.sortedByCoord.deduplicated.out.bam | cut -f1 | sort -u | wc -l >> ./dedup.log
+	script:
+	(bam, bai) = bams
+	"""
+	export RUST_LOG=info 
+	rumi --is_paired $bam --output rumi_dedup.bam --umi_tag XU #>dedup.log
+	sambamba sort -t $task.cpus ./rumi_dedup.bam -o rumi_dedup.sort.bam 
+	sambamba index -t $task.cpus ./rumi_dedup.sort.bam
+	touch dedup.log
+	printf "Reads In: " >>./dedup.log; samtools view $bam |cut -f1| sort -u | wc -l >> ./dedup.log
+	printf "Reads Out: " >>./dedup.log; samtools view ./rumi_dedup.sort.bam |cut -f1| sort -u | wc -l >> ./dedup.log  
+	#printf "unique_input_umi: " >> ./dedup.log; samtools view $bam | cut -f16 | sort -u | wc -l >> ./dedup.log
+	printf "No Mate: " >> ./dedup.log;samtools view -F 2 $bam | cut -f1,16 | sort -u| wc -l >> ./dedup.log
+	printf "unique_input_reads: " >> ./dedup.log; samtools view -f 2 $bam | cut -f1,16 | sort -u| wc -l >> ./dedup.log
+	printf "unique_umi: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f16 | sort -u | wc -l >> ./dedup.log
+	printf "unique_output_reads: " >> ./dedup.log; samtools view ./rumi_dedup.sort.bam | cut -f1,16 | sort -u | wc -l >> ./dedup.log
 	cp dedup.log dedup.log.$name
-        """
-    }
+	"""
+	}
 } else {
-    umiTagging_ch.into { BamLong_ch} 
+    umiTagging_ch.set{ BamLong_ch } 
     report_dedup = Channel.empty()
     meta_dedup = Channel.empty()
 }
@@ -348,6 +335,7 @@ process count_rna {
     val(name) into (counts_name, xls_name, threshold_name)
     file "gene_counts_longRNA*" into (counts_ch, counts_xls, count_threshold_ch)
     file "*.$name" into report_longRNACounts
+    file "*.featureCounts.bam"
 
     script:
     strand = params.reverseStrand ? "-s 2" : "-s 1"
@@ -436,6 +424,7 @@ process assembleReport {
     file '*_htmlReport.html'
     file '*_pdfReport.pdf'
     file '*_csvReport.csv'
+    val "done" into report_complete
     
     script:
     """
@@ -461,6 +450,8 @@ process combinedXLS{
 
 	output:
 	file "readcount_report.xlsx"
+	val "done" into xls_complete
+	
 	
 	script:
 	"""
@@ -482,7 +473,8 @@ process metaReport{
 	file 'batch_summary.csv'
 	file 'batch_summary.html'
 	file 'batch_summary.pdf'
-	val "done" into clean_workspace
+	val "done" into meta_complete
+	
 	script:	
 	"""
 	mkdir -p tmp/
@@ -495,13 +487,22 @@ process metaReport{
 }
 if(params.tidy == true){
 	process tidy_up{
-		input: val x from clean_workspace
+		afterScript 'bash /opt/biorad/src/cleanup.sh "${workflow.workDir}"'
 
+		input: 
+		val m from meta_complete
+		val r from report_complete
+		val x from xls_complete
 		
+		script:
 		"""
-		 rm -r ${workflow.workDir}
+		
+		echo "${workflow.workDir}"
 		""" 
 
+	}
+	workflow.onComplete{
+		clean
 	}
 }
 
@@ -548,7 +549,7 @@ def helpMessage(paramsWithUsage) {
     Usage:
 
     The typical command for running the pipeline is as follows:
-    nextflow run . --reads './tests/*_R{1,2}.fastq.gz' --genome hg38 --outDir /data/out --skipUmi --genomes_base /mnt/genome-annotations
+    nextflow run Sequoia_express_toolkit/main.nf  --outDir ./output/ --reads '~/read/express/' --genome hg38 --genomes_base ./genomes/
 
     Args:
 

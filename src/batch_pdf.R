@@ -7,7 +7,13 @@
 #' - \setmainfont{FreeSans}
 #' - \usepackage{booktabs}
 #' - \usepackage[table]{xcolor}
+#' - \usepackage{fancyhdr}  
 #' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
+#' - \pagestyle{fancy}                                                                                                
+#' - \fancyhead[CO,CE]{\includegraphics[width=3cm]{/opt/biorad/src/vendor-logo.png}}                                  
+#' - \fancyfoot[CO,CE]{SEQuoia Express Batch Report}       
+#' - \fancyfoot[LE,RO]{\thepage}                                                                                      
+#' - \pretitle{\vspace{7cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}                                                                                                             
 #' - \posttitle{\end{center}\newpage}
 #' output: 
 #'   pdf_document:
@@ -52,7 +58,7 @@ kable(report_frame,  "latex", booktabs = T) %>%
 	kable_styling(latex_options = c("striped", "hold_position"))
 
 #' \newpage
-#' `r if(dedupDirExists) {"# Summary Alignment Report"}`
+#' `r if(dedupDirExists) {"# Deduplication Report"}`
 #+ eval=dedupDirExists, echo=FALSE, fig.asp=1, fig.align="center", message=F, warn=F
 kable(dedup_frame,  "latex", booktabs = T) %>% 
 	kable_styling(latex_options = c("striped", "hold_position"))

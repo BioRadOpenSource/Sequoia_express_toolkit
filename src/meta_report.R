@@ -56,8 +56,10 @@ files = list.files(dedupDir)
 dedup_frame = data.frame(Metrics=c("Total input alignments",
 				   "Total output alignments",
 				   "Unique UMIs observed",
-				   "Average UMIs per position",
-				   "Maximum UMIs per position",
+				   #"Average UMIs per position",
+				   #"Maximum UMIs per position",
+				   #"Chimeric Reads",
+				   "Reads with unpaired mate",
 				   "Unique Input Reads",
 				   "Unique Output Reads",
 				   "% PCR Duplicates"
@@ -65,20 +67,25 @@ dedup_frame = data.frame(Metrics=c("Total input alignments",
 for( f in files){
 	write(paste0("working on reading file ",f), stderr())
 	file_loc = paste0(dedupDir,"/",f)
-	umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
-	inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7|sed 's/,//g'"), intern=T))
-	outputAlignments <- as.numeric(system(paste('grep "reads out"', file_loc, "| cut -d: -f4"), intern=T))
-	meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
-	maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+	umisObserved <- as.numeric(system(paste('grep -F "unique_umi"', file_loc, "| cut -d' ' -f2"), intern=T))
+	inputAlignments <- as.numeric(system(paste('grep "Reads In"', file_loc, "| cut -d ' ' -f3"), intern=T))
+	outputAlignments <- as.numeric(system(paste('grep "Reads Out"', file_loc, "| cut -d ' ' -f3"), intern=T))
+	#meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+	#maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
 	uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 	uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
-	pcr_dup = round(((1 - (uniqOutputReads / uniqInputReads)) * 100),digits=2)
+	#chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ' ' -f3"), intern=T))
+	#unpaired <- as.numeric(system(paste('grep "Reads Unpaired"', file_loc, "| cut -d' ' -f3"), intern=T))
+	uMate = as.numeric(system(paste('grep "No Mate"', file_loc, "| cut -d' ' -f3"), intern=T))
+	pcr_dup = round(((1 - (uniqOutputReads /uniqInputReads)) * 100),digits=2)
 	df = data.frame(Results=c(
 			inputAlignments,
 			outputAlignments,
 			umisObserved,
-			meanUmiPerPos,
-			maxUmiPerPos,
+			#meanUmiPerPos,
+			#maxUmiPerPos,
+			#chimera,
+			uMate,
 			uniqInputReads,
 			uniqOutputReads,
 			pcr_dup), check.names=F)
@@ -102,7 +109,7 @@ cat("___________________________________")
 cat("\n")
 cat("\n")
 if(dedupDirExists){
-cat("Dedupilcation Report\n")
+cat("Deduplication Report\n")
 write.csv(dedup_frame)
 cat("___________________________________")
 cat("\n")

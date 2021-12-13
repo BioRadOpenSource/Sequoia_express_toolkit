@@ -1,5 +1,5 @@
 #' ---
-#' title: "SEQuoia Express Analysis Report"
+#' title: "RNA Sequencing Report: Sequoia Express Stranded RNA Library Analysis"
 #' output:
 #'  html_document:
 #'    toc: true
@@ -170,7 +170,7 @@ cat(" \n \n")
 #' `r if(debarcodeDirExists) { "## UMI Parsing {.tabset .tabset-fade .tabset-pills}" }`
 #+ eval=debarcodeDirExists, echo=FALSE, fig.asp=0.2, fig.align="center", message=F, results="asis"
 
-deb <- read.table(paste0(debarcodeDir,"/debarcode_stats.txt.",n), fill=T)
+deb <- read.table(paste0(debarcodeDir,"/",n,"_R1_barcode_stats.tsv"), fill=T)
 inputReads <- as.numeric(as.character(deb$V3[1]))
 validBcReads <- as.numeric(as.character(deb$V3[2]))
 invalidBcReads <- inputReads-validBcReads
@@ -178,7 +178,7 @@ invalidBcReads <- inputReads-validBcReads
 #create data frame
 df <- data.frame(
   Metric = c("Input Reads", "Reads with Valid UMI", "% Reads with Valid UMI"),
-  Value = c(inputReads, validBcReads, signif(validBcReads/inputReads, 3) * 100),
+  Value = c(inputReads, validBcReads, signif(validBcReads/inputReads, 4) * 100),
   stringsAsFactors = FALSE
 )
 noHtml = deb_df
@@ -230,7 +230,7 @@ rt$`Value` <- cell_spec(
 					"Reads written out for downstream use",
 					"The total number of bases processed in all reads",
 					"The number of bases trimmed in quality trimming",
-					"The totan number of bases written out"),
+					"The total number of bases written out"),
 		title = NULL,
 		position = "left"
 	)
@@ -277,7 +277,8 @@ align_df$`Value` <- cell_spec(
                 "The median 5 prime bias of the 1000 most highly expressed transcripts. The 5 prime bias is calculated per transcript as: mean coverage of the 5 prime-most 100 bases divided by the mean coverage of the whole transcript.",
                 "The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per transcript as: mean coverage of the 3 prime-most 100 bases divided by the mean coverage of the whole transcript.",
                 "The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts.",
-                "The Percentage of reads corresponding to transcripts which map to the correct strand of a reference genome "),
+                "The percentage of reads corresponding to transcripts which map to the correct strand of a reference genome ",
+		"Percent of aligned bases that mapped to regions encoding ribosomal RNA"),
     
     title = NULL,
     position = "left"
@@ -323,8 +324,10 @@ dedup_df$`Value` <- cell_spec(
     content = c("The total number of alignments passed into deduplication",
                 "The total number of alignments output after deduplication",
                 "The total number of unique UMIs observed",
-                "The average UMIs per position",
-                "The maximum number of UMIs observed at any position",
+		"Number of reads from input that have no paired mate",
+                #"The average UMIs per position",
+                #"The maximum number of UMIs observed at any position",
+		#"Number of Identified Chimeric reads",
                 "The number of unique input reads passed into deduplication",
                 "The number of unique output reads after deduplication",
                 "The percentage of reads that are PCR duplicates ((1 - (Unique Output Reads / Unique Input Reads)) * 100)"),
@@ -378,7 +381,7 @@ countByBiotype$count <- prettyNum(countByBiotype$count, big.mark = ",", scientif
 
 #render tables behind pills
 write("Rendering counts information", stderr())
-cat("###", "RNA Count Summary", "\n")
+cat("###", "Long RNA Count Summary", "\n")
 countLong = countLong[countLong$Count >0,]
 datatable(countLong, rownames=F)
 cat(" \n \n")

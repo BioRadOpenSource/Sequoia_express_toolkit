@@ -28,7 +28,7 @@ fastqcDirExists <- length(fastqcDir) == 1
 write(paste("fastqcDirExists: ", fastqcDirExists), stderr())
 
 #debarcoding
-debarcodeDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="debarcode_stats.txt.*")))
+debarcodeDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="_barcode_stats.tsv")))
 debarcodeDirExists <- length(debarcodeDir) == 1
 write(paste("debarcodeDirExists: ", debarcodeDirExists), stderr())
 
@@ -64,15 +64,15 @@ for(n in names){
 	#set vraibles to be used by all to lower processing time 
 
 	if(debarcodeDirExists){
-		deb <- read.table(paste0(debarcodeDir,"/debarcode_stats.txt.",n), fill=T)
-		inputReads <- as.numeric(as.character(deb$V3[1]))
-		validBcReads <- as.numeric(as.character(deb$V3[2]))
+		deb <- read.table(paste0(debarcodeDir,"/",n,"_R1_barcode_stats.tsv"), fill=T,sep="\t",header=T)
+		inputReads <- as.numeric(as.character(deb$count[1]))
+		validBcReads <- as.numeric(as.character(deb$count[2]))
 		invalidBcReads <- inputReads-validBcReads
 
 		#create data frame
 		deb_df <- data.frame(
 		   Metric = c("Input Reads", "Reads with Valid UMI", "% Reads with Valid UMI"),
-		   Value = c(inputReads, validBcReads, signif(validBcReads/inputReads, 3) * 100),    
+		   Value = c(inputReads, validBcReads, signif(validBcReads/inputReads, 4) * 100),    
 		   stringsAsFactors = FALSE
 		   )
 
@@ -118,7 +118,7 @@ for(n in names){
 				 "Median 3' Bias" = rna$MEDIAN_3PRIME_BIAS,
 				 "Median 5' to 3' Bias" = rna$MEDIAN_5PRIME_TO_3PRIME_BIAS,
 				 "% Stranded" = rna$PCT_CORRECT_STRAND_READS * 100,
-				 "% rRNA bases" = (rna$RIBOSOMAL_BASES/rna$PF_BASES) *100,
+				 "% rRNA bases" = rna$PCT_RIBOSOMAL_BASES *100,
 				 check.names= F)
 		align_df <- as.data.frame(t(align_df)) %>% rownames_to_column()
 		names(align_df) <- c("Metric", "Value")
@@ -126,19 +126,24 @@ for(n in names){
 	
 	if(dedupDirExists){
 		file_loc = paste0(dedupDir, "/dedup.log.",n)
-		umisObserved <- as.numeric(system(paste('grep -F "#umis"', file_loc, "| cut -d' ' -f5"), intern=T))
-		inputAlignments <- as.numeric(system(paste('grep "Input Reads"', file_loc, "| cut -d' ' -f7 |sed 's/,//g'"), intern=T))
-		outputAlignments <- as.numeric(system(paste('grep "reads out"', file_loc, "| cut -d: -f4"), intern=T))
-		meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
-		maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+		umisObserved <- as.numeric(system(paste('grep -F "unique_umi"', file_loc, "| cut -d' ' -f2"), intern=T))
+		inputAlignments <- as.numeric(system(paste('grep "Reads In"', file_loc, "| cut -d' ' -f3"), intern=T))
+		outputAlignments <- as.numeric(system(paste('grep "Reads Out"', file_loc, "| cut -d' ' -f3"), intern=T))
+		uMate <- as.numeric(system(paste('grep "No Mate"', file_loc, "| cut -d' ' -f3"), intern=T))
+		#unpaired <- as.numeric(system(paste('grep "Reads Unpaired"', file_loc, "| cut -d' ' -f3"), intern=T))
+		#meanUmiPerPos <- as.numeric(system(paste('grep "Mean number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+		#maxUmiPerPos <- as.numeric(system(paste('grep "Max. number of unique UMIs per position"', file_loc, "| cut -d: -f4"), intern=T))
+		#chimera <- as.numeric(system(paste('grep "Reads Chimeric"', file_loc, "| cut -d ' ' -f3"), intern=T))
 		uniqInputReads <- as.numeric(system(paste('grep "unique_input_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 		uniqOutputReads <- as.numeric(system(paste('grep "unique_output_reads"', file_loc, "| cut -d ' ' -f2"), intern=T))
 
 		dedup_df <- data.frame("Total input alignments" = inputAlignments,
 				 "Total output alignments" = outputAlignments,
 		                 "Unique UMIs observed" = umisObserved,
-				 "Average UMIs per position" = meanUmiPerPos,
-				 "Maximum UMIs per position" = maxUmiPerPos,
+				 #"Average UMIs per position" = meanUmiPerPos,
+				 #"Maximum UMIs per position" = maxUmiPerPos,
+				 #"Chimeric Reads" =chimera,
+				 "Reads with unpaired mate" = uMate,
 				 "Unique Input Reads" = uniqInputReads,
 				 "Unique Output Reads" = uniqOutputReads,
 				 "% PCR Duplicates" = (1 - (uniqOutputReads / uniqInputReads)) * 100,
@@ -159,9 +164,9 @@ for(n in names){
 		countLong <- read.table(paste0(countsDir, "/gene_counts_longRNA.",n), header=T, sep="\t", col.names=c("Gene", "Chr", "Start", "End", "Strand", "Length", "Count"))
 		write("Processing gene_biotypes.tsv", stderr())
 		biotypes <- read.table(paste(anno_dir,"gene_biotypes.tsv", sep="/"), sep="\t", header=T)
-		if("rRNA" %in% biotypes[,"gene_biotype"]){
-		biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
-		}
+		#if("rRNA" %in% biotypes[,"gene_biotype"]){
+		#biotypes[biotypes["gene_biotype"] == "rRNA",]["gene_biotype"] <- "mitochondrial_rRNA"
+		#}
 		countLong <- left_join(countLong, biotypes, by = c("Gene" = "gene_id"))
 		countAll <- countLong
 
@@ -175,16 +180,16 @@ for(n in names){
 
 	}
 
-	env <- Sys.getenv(c("FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","UMI_TOOLS_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+	env <- Sys.getenv(c("Software Name","FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
 	env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
-	umi_tools_version <- system("umi_tools --version", intern=T)
-	umi_tools_version <- strsplit(umi_tools_version, ":")[[1]][2]
-	env[which(env$rowname=="UMI_TOOLS_VERSION"), 2] = gsub(" ", "", umi_tools_version)
+	umi_tools_version <- system("rumi -V", intern=T)
+	umi_tools_version <- strsplit(umi_tools_version, " ")[[1]][2]
+	env[which(env$rowname=="RUMI_VERSION"), 2] = gsub(" ", "", umi_tools_version)
 	write("Preparing to read imageInfo.txt", stderr())
-	containerInfo <- read.table("/opt/biorad/imageInfo.txt", stringsAsFactors=FALSE)
+	containerInfo <- read.table("/opt/biorad/imageInfo.txt", stringsAsFactors=FALSE,sep=":")
 	write("Read imageInfo.txt", stderr())
-	containerInfo <- data.frame("rowname" = paste(containerInfo[,1], containerInfo[,2]), env = containerInfo[,3], stringsAsFactors=FALSE)
-	containerInfo[3,2] <- substr(containerInfo[3,2], 1,7)
+	containerInfo <- data.frame("rowname" = containerInfo[,1], env = containerInfo[,2], stringsAsFactors=FALSE)
+	containerInfo[3,2] <- substr(containerInfo[3,2], 1,8)
 	anno_path <- unlist(strsplit(anno_dir,"/"))
 	referenceGenome <- anno_path[grepl("hg38|mm10|rnor6", anno_path)]
 	if(length(referenceGenome) == 0)
@@ -196,7 +201,7 @@ for(n in names){
 	anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), comment.char="", fill=T, sep=",")
 	write("Read annotation_version", stderr())
 	anno_source <- gsub("#!annotation-source ", "", anno_version$V1[grep("annotation-source", anno_version$V1)])
-	localVars <- data.frame(rowname = c("Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
+	localVars <- data.frame(rowname = c("Sample Name","Reference Genome", "Annotation Source", "UMI Aware", "ERCC"), env = c(n,referenceGenome, anno_source, dedupDirExists, isErcc), stringsAsFactors=FALSE)
 	env <- rbind(containerInfo, localVars, env)
 	env[nrow(env) + 1,] = list("Report Generated", paste(as.character(Sys.time()), "UTC"))
 	colnames(env) <- NULL
@@ -204,6 +209,49 @@ for(n in names){
 	#placeholder for biotype plot
 	biotype_pl = NULL
 	
+	debar <- data.frame(
+		"Input Reads"	= 		"The number of reads in the input FASTQ files", 
+		"Reads with Valid UMI" = 	"The number of R1 reads with a valid UMI" ,
+		"% Reads with Valid UMI" =	"The percentage of input reads with a valid UMI",
+		check.names=F)
+		glossary <- data.frame(
+		"Reads Input" = 		"The number of reads input to alignment.",
+	      	"Uniquely Mapped Reads" = 	"The number of reads mapped to a unique genetic locus.",
+	      	"Multi-mapped Reads" = 		"The number of reads mapping to multiple genetic loci.",
+	      	"Reads mapped to too many loci"="The number of reads mapping to too many genetic loci for further processing (a subset of the value listed above).",
+	      	"Unmapped Reads" = 		"The number of reads that did not map to the reference genome.",
+	      	"PF Bases" = 			"The total number of PF bases including non-aligned reads.",
+	      	"PF Aligned Bases" = 		"The total number of aligned PF bases. Non-primary alignments are not counted. Bases in aligned reads that do not correspond to reference (e.g. soft clips, insertions) are not counted.",
+	     	"Coding Bases" = 		"Number of bases in primary alignments that align to a non-UTR coding base for some gene, and not ribosomal sequence.",
+	      	"UTR Bases" = 			"Number of bases in primary alignments that align to a UTR base for some gene, and not a coding base.",
+	      	"Intronic Bases" = 		"Number of bases in primary alignments that align to an intronic base for some gene, and not a coding or UTR base.",
+	      	"Intergenic Bases" =		"Number of bases in primary alignments that do not align to any gene." ,
+	      	"Ribosomal Bases" = 		"Number of bases in primary alignments that align to ribosomal sequence.",
+	      	"Median CV Coverage" = 		"The median coefficient of variation (CV) or stdev/mean for coverage values of the 1000 most highly expressed transcripts. Ideal value = 0.",
+	      	"Median 5' Bias" = 		"The median 5 prime bias of the 1000 most highly expressed transcripts. The 5 prime bias is calculated per transcript as: mean coverage of the 5 prime-most 100 bases divided by the mean coverage of the whole transcript.",
+	      	"Median 3' Bias" = 		"The median 3 prime bias of the 1000 most highly expressed transcripts, where 3 prime bias is calculated per transcript as: mean coverage of the 3 prime-most 100 bases divided by the mean coverage of the whole transcript.",
+	      	"Median 5' to 3' Bias" = 	"The ratio of coverage at the 5 prime end to the 3 prime end based on the 1000 most highly expressed transcripts.",
+	      	"% Stranded" = 			"The percentage of reads corresponding to transcripts which map to the correct strand of a reference genome ",
+	      	"% rRNA bases" = 		"Percent of aligned bases that mapped to regions encoding ribosomal RNA",
+		check.names=F)
+	dedup_terms = data.frame(	
+		
+		"Total input alignments" = "The total number of alignments passed into deduplication",
+		"Total output alignments" = "The total number of alignments output after deduplication",
+		"Unique UMIs observed" = 	"The total number of unique UMIs observed",
+		"Reads with unpaired mate" = 	"Number of reads from input that have no paired mate post alignment",
+		"Unique Input Reads" = 		"The number of unique input reads passed into deduplication",
+		"Unique Output Reads" = 	"The number of unique output reads after deduplication",
+		"% PCR Duplicates" = 		"The percentage of reads that are PCR duplicates ((1 - (Unique Output Reads / Unique Input Reads)) * 100)",
+		check.names= F
+	)
+	glossary = as.data.frame(t(glossary))
+	colnames(glossary) <-NULL
+	dedup_terms = as.data.frame(t(dedup_terms))
+	colnames(dedup_terms) <-NULL
+	debar = as.data.frame(t(debar))
+	colnames(debar) <-NULL
+
 	#Breaker ------
 	htmlReport <- paste(temp_dir, "htmlReport.R", sep="/")
 	pdfReport <- paste(temp_dir, "pdfReport.R", sep="/")
@@ -228,6 +276,7 @@ for(n in names){
 	system(paste0("mv pdfReport.pdf ",n,"_pdfReport.pdf"))
 	system(paste0("mv htmlReport.html ",n,"_htmlReport.html"))
 	system(paste0("mv csvReport.csv ",n,"_csvReport.csv"))
+
 }
 unlink(htmlReportRmd)
 unlink(htmlReport)
