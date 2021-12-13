@@ -354,11 +354,11 @@ process count_rna {
     """
 }
 
-process calcRPMKTPM {
+process calcRPKMTPM {
     label 'low_memory'
     label 'low_cpu'
-    tag "calcRPMKTPM on $name"
-    publishDir "${params.outDir}/$name/calcRPMKTPM", mode: 'copy'
+    tag "calcRPKMTPM on $name"
+    publishDir "${params.outDir}/$name/calcRPKMTPM", mode: 'copy'
     input:
     val name from counts_name
     file(counts) from counts_ch
