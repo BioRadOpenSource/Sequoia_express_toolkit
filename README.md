@@ -76,7 +76,7 @@ nextflow run Sequoia_express_toolkit/main.nf  --outDir ./output/ --reads '~/read
 ```
 #### Help
 ```
-$ nextflow main.nf --help
+$ nextflow run main.nf --help
 
 /-----------------------------------------------------------\ 
 | __________.__                __________             .___  |
