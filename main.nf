@@ -485,26 +485,6 @@ process metaReport{
 	cp ./tmp/batch_pdf.pdf ./batch_summary.pdf
 	"""
 }
-if(params.tidy == true){
-	process tidy_up{
-		afterScript 'bash /opt/biorad/src/cleanup.sh "${workflow.workDir}"'
-
-		input: 
-		val m from meta_complete
-		val r from report_complete
-		val x from xls_complete
-		
-		script:
-		"""
-		
-		echo "${workflow.workDir}"
-		""" 
-
-	}
-	workflow.onComplete{
-		clean
-	}
-}
 
 /* Helper Functions */
 def readParamsFromJsonSettings() {
@@ -519,7 +499,7 @@ def readParamsFromJsonSettings() {
 }
 
 def tryReadParamsFromJsonSettings() throws Exception {
-    def paramsContent = new File(config.params_description.path).text
+    def paramsContent = new File(params.settings).text
     def paramsWithUsage = new groovy.json.JsonSlurper().parseText(paramsContent)
     return paramsWithUsage.get('parameters')
 }
