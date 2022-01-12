@@ -52,9 +52,9 @@ summary['Min MAPQ To Count'] = params.minMapqToCount
 summary['Output Dir'] = params.outDir
 summary['Trace Dir'] = params.tracedir
 summary['Seq Type'] = params.seqType
-summary['Clean up'] = params.tidy
+//summary['Clean up'] = params.tidy
 /*summary['Max Cores'] = task.cpus*/
-summary['geneId'] = geneId
+//summary['geneId'] = geneId
 summary['sjdb GTF File'] = sjdbGTFFile
 summary['ref Flat File'] = refFlatFile
 summary['Ribosomal Intervals'] = ribosomalIntervalFile
@@ -87,7 +87,23 @@ Channel
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .set { read_files}
 
-read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation; raw_reads_dead}
+
+if(params.seqType =="SE"){
+	process rename_tuple{
+		input:
+		set sid, file(fastq) from read_files
+		output:
+		set stdout, file(reads) into raw_reads_fastqc, raw_reads, raw_reads_validation
+		script:
+		reads = fastq
+		"""
+		echo ${sid} | sed "s/\\(_\\)R1.*//g" | xargs printf
+		"""	
+	}
+}
+else{
+	read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation; raw_reads_dead}
+}
 // Begin Processing
 
 if (params.validateInputs) {
