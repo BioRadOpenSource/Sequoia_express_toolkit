@@ -74,7 +74,13 @@ log.info bioradHeader()
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "----------------------------------------------------"
 
-reads = params.reads+"*{R1,R2}*"
+if(params.seqType =="SE"){
+	reads = params.reads+"*_R1*"
+	params.skipUmi =true
+}
+else{
+	reads = params.reads+"*{R1,R2}*"
+}
 
 Channel
     .fromFilePairs( reads, size:-1)
