@@ -109,7 +109,7 @@ else{
 if (params.validateInputs) {
     process validateInputs {
         tag "Validation on $sample_id"
-        publishDir "${params.outDir}/$sample_id/validation", mode: 'copy'
+        publishDir "${params.outDir}/Sample_Files/$sample_id/validation", mode: 'copy'
 
         input:
         set sample_id, file(reads) from raw_reads_validation
@@ -122,7 +122,7 @@ if (params.validateInputs) {
 }
 process fastQc {
     tag "FASTQC on $sample_id"
-    publishDir "${params.outDir}/$sample_id/fastqc", mode: 'copy',
+    publishDir "${params.outDir}/Sample_Files/$sample_id/fastqc", mode: 'copy',
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
 
     input:
@@ -144,7 +144,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 	label 'mid_cpu'
 	label 'mid_mem'
 	tag "debarcode DEAD on $sample_id"
-	publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
+	publishDir "${params.outDir}/Sample_Files/$sample_id/debarcode", mode: 'copy'
 
 	input:
 	set sample_id, file(reads) from raw_reads
@@ -166,7 +166,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 process cutAdapt {
     label 'mid_cpu'
     tag "cutAdapt on $name"
-    publishDir "${params.outDir}/$name/cutAdapt", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/cutAdapt", mode: 'copy'
 
     input:
     set val(name), file(reads) from debarcoded_ch
@@ -215,7 +215,7 @@ process starAlign {
     label 'high_memory'
     label 'mid_cpu'
     tag "starAlign on $name"
-    publishDir "${params.outDir}/$name/star", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/star", mode: 'copy'
 
 
     input:
@@ -256,7 +256,7 @@ process starAlign {
 process picardAlignSummary {
     label 'low_memory'
     tag "picardAlignSummary on $name"
-    publishDir "${params.outDir}/$name/picardAlignSummary", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/picardAlignSummary", mode: 'copy'
 
     input:
     set val(name), file(bams) from picardBam_ch
@@ -310,7 +310,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 	label 'high_memory'
 	label 'mid_cpu'
 	tag "rumi dedup on $name"
-	publishDir "${params.outDir}/$name/dedup", mode: 'copy'
+	publishDir "${params.outDir}/Sample_Files/$name/dedup", mode: 'copy'
 	
 	input:
 	set val(name), file(bams) from dedup_in_ch
@@ -347,7 +347,7 @@ process count_rna {
     label 'mid_cpu'
     label 'low_memory'
     tag "countLongRNA on $name"
-    publishDir "${params.outDir}/$name/RNACounts", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/RNACounts", mode: 'copy'
 
     input:
     set val(name), file(bam) from BamLong_ch
@@ -380,7 +380,7 @@ process calcRPKMTPM {
     label 'low_memory'
     label 'low_cpu'
     tag "calcRPKMTPM on $name"
-    publishDir "${params.outDir}/$name/calcRPKMTPM", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/calcRPKMTPM", mode: 'copy'
     input:
     val name from counts_name
     file(counts) from counts_ch
@@ -399,7 +399,7 @@ if(params.minGeneType != "none"){
         process thresholdResults{
                 label 'low_memory'
                 tag 'thresholdGenes'
-                publishDir "${params.outDir}/$name/RNACounts", mode:'copy'
+                publishDir "${params.outDir}/Sample_Files/$name/RNACounts", mode:'copy'
 
                 // take in user specified cutoff and type and generate appropriate report
                 // should also include biotype 
@@ -430,7 +430,7 @@ else{
 process assembleReport {
     label 'low_memory'
     tag "assembleReport"
-    publishDir "${params.outDir}/reports", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
+    publishDir "${params.outDir}/report", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
 
     input:
     file annoDirPath
@@ -463,7 +463,7 @@ process assembleReport {
 process combinedXLS{
 	label 'low_memory'
 	tag "countsAsXls"
-	publishDir "${params.outDir}/$name/calcRPMKTPM", mode:'copy'
+	publishDir "${params.outDir}/Sample_Files/$name/calcRPMKTPM", mode:'copy'
 
 	input:
 	file rpkm from normalize_xls
@@ -483,7 +483,7 @@ process combinedXLS{
 }
 process metaReport{
 	tag "Overall Batch Summary"
-	publishDir "${params.outDir}/", mode:'copy'
+	publishDir "${params.outDir}/report", mode:'copy'
 	// generate a high level summary of batch run
 	
 	input:
