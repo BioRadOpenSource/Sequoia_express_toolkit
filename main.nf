@@ -354,8 +354,7 @@ process count_rna {
     file longRNAgtfFile
     
     output:
-    val(name) into (counts_name, xls_name, threshold_name)
-    file "gene_counts_longRNA*" into (counts_ch, counts_xls, count_threshold_ch)
+    set val(name),file ("gene_counts_longRNA.$name") into counts_ch, counts_xls,count_threshold_ch
     file "*.$name" into report_longRNACounts
     file "*.featureCounts.bam"
 
@@ -371,8 +370,8 @@ process count_rna {
     -a $longRNAgtfFile \
     -o ./gene_counts_longRNA \
     -R BAM $just_bam
-    cp gene_counts_longRNA.summary gene_counts_longRNA.summary.$name
-    cp gene_counts_longRNA gene_counts_longRNA.$name
+    mv gene_counts_longRNA.summary gene_counts_longRNA.summary.$name
+    mv gene_counts_longRNA gene_counts_longRNA.$name
     """
 }
 
@@ -382,16 +381,14 @@ process calcRPKMTPM {
     tag "calcRPKMTPM on $name"
     publishDir "${params.outDir}/Sample_Files/$name/calcRPKMTPM", mode: 'copy'
     input:
-    val name from counts_name
-    file(counts) from counts_ch
+    set val(name), file(counts) from counts_ch
 
     output:
-    file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
-    val name into thresh_ch
+    set val(name),file('gene_counts_rpkmtpm.txt') into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
 
     script:
     """
-    python3 /opt/biorad/src/calc_rpkm_tpm.py gene_counts_longRNA ./gene_counts_rpkmtpm.txt
+    python3 /opt/biorad/src/calc_rpkm_tpm.py $counts ./gene_counts_rpkmtpm.txt
     """
 
 }
@@ -404,10 +401,7 @@ if(params.minGeneType != "none"){
                 // take in user specified cutoff and type and generate appropriate report
                 // should also include biotype 
                 input:
-		val name from thresh_ch
-		file ("./out/") from rpkm_threshold_ch 
-		file ("./out/") from count_threshold_ch	
-
+		val name, file ("./out/") ,file ("./out/") from rpkm_threshold_ch.join(count_threshold_ch, by:0)
                 output:
                 file "Full_count_table.csv"
                 file "Filter_count_table.csv"
@@ -466,9 +460,7 @@ process combinedXLS{
 	publishDir "${params.outDir}/Sample_Files/$name/calcRPMKTPM", mode:'copy'
 
 	input:
-	file rpkm from normalize_xls
-	val(name) from xls_name 
-        file(count_file) from counts_xls
+	set val(name), file(count_file), file(rpkm) from counts_xls.join(normalize_xls, by: 0)
 
 	output:
 	file "readcount_report.xlsx"
