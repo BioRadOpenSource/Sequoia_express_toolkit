@@ -7,7 +7,7 @@ temp_dir = args[4]
 anno_dir = args[5]
 
 
-countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="longRNA.summary")))
+countsDir <- unique(dirname(list.files(base_dir, recursive=TRUE, full.names=TRUE, include.dirs=TRUE, pattern="longRNA")))
 countsDirExists <- length(countsDir) == 1
 write(paste("countsDirExists: ", countsDirExists), stderr())
 
@@ -25,21 +25,18 @@ normal <- read.table(paste(rpkmDir,"gene_counts_rpkmtpm.txt", sep="/"), sep="\t"
 colnames(normal)[1] = "Gene"
 together = merge(countsWbiotype, normal, by="Gene")
 
-write.table(together, "Full_count_table.csv", sep=",", header=T)
+write.table(together, "Full_count_table.csv", sep=",", row.names=F)
 
 if(type =="reads"){
 	together = together[together$Count >value,]
-	write.table(together, "Filter_count_table.csv", sep=",", header=T, row.names=F)
-}
-else if( type == "RPKM"){
+	write.table(together, "Filter_count_table.csv", sep=",", row.names=F)
+}else if( type == "RPKM"){
 	together = together[together$RPKM >value,]
-	write.table(together, "Filter_count_table.csv", sep=",", header=T,row.names=F)
-}
-else if( type == "TPM"){
+	write.table(together, "Filter_count_table.csv", sep=",", row.names=F)
+}else if( type == "TPM"){
 	together = together[together$TPM >value,]
-	write.table(together, "Filter_count_table.csv", sep=",", header=T, row.names=F)
-}
-else{
-	write.table(together, "Filter_count_table.csv", sep=",", header=T, row.names=F)
+	write.table(together, "Filter_count_table.csv", sep=",",  row.names=F)
+}else{
+	write.table(together, "Filter_count_table.csv", sep=",",  row.names=F)
 }
 

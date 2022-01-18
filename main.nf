@@ -402,6 +402,7 @@ if(params.minGeneType != "none"){
                 // should also include biotype 
                 input:
 		set val(name), file(rpkm) ,file(counts) from rpkm_threshold_ch.join(count_threshold_ch, by:0)
+		file annoDirPath
                 output:
                 file "Full_count_table.csv"
                 file "Filter_count_table.csv"
@@ -411,7 +412,7 @@ if(params.minGeneType != "none"){
                 """
 		mkdir -p ./out/
 		mv $rpkm ./out/
-		mv $counts ./out/
+		mv $counts ./out/gene_counts_longRNA
 		mkdir -p ./tmp
                 cp /opt/biorad/src/threshold_results.R ./tmp/threshold_results.R
                 Rscript ./tmp/threshold_results.R "${params.minGeneType}" "${params.minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
