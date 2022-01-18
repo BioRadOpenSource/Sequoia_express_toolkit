@@ -401,7 +401,7 @@ if(params.minGeneType != "none"){
                 // take in user specified cutoff and type and generate appropriate report
                 // should also include biotype 
                 input:
-		val name, file ("./out/") ,file ("./out/") from rpkm_threshold_ch.join(count_threshold_ch, by:0)
+		set val(name), file(rpkm) ,file(counts) from rpkm_threshold_ch.join(count_threshold_ch, by:0)
                 output:
                 file "Full_count_table.csv"
                 file "Filter_count_table.csv"
@@ -409,9 +409,12 @@ if(params.minGeneType != "none"){
 
                 script:
                 """
+		mkdir -p ./out/
+		mv $rpkm ./out/
+		mv $counts ./out/
 		mkdir -p ./tmp
-                cp /opt/biorad/src/threshold_report.R ./tmp/threshold_report.R
-                Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${params.minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+                cp /opt/biorad/src/threshold_results.R ./tmp/threshold_results.R
+                Rscript ./tmp/threshold_results.R "${params.minGeneType}" "${params.minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
 		cp Filter_count_table.csv Filter_count_table.csv.$name                
                 """
         }
@@ -469,7 +472,7 @@ process combinedXLS{
 	
 	script:
 	"""
-	python3 /opt/biorad/src/converge_xls.py gene_counts_longRNA $rpkm 
+	python3 /opt/biorad/src/converge_xls.py $count_file $rpkm 
 	"""
 
 }
