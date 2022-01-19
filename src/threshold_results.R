@@ -25,7 +25,7 @@ normal <- read.table(paste(rpkmDir,"gene_counts_rpkmtpm.txt", sep="/"), sep="\t"
 colnames(normal)[1] = "Gene"
 together = merge(countsWbiotype, normal, by="Gene")
 
-together = together[,c("Gene","TotalReads","RPKM","TPM")]
+together = together[,c("Gene","Count","RPKM","TPM")]
 write.table(together, "Full_count_table.csv", sep=",", row.names=F)
 
 if(type =="reads"){
