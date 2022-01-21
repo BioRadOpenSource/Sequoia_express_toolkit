@@ -52,9 +52,9 @@ summary['Min MAPQ To Count'] = params.minMapqToCount
 summary['Output Dir'] = params.outDir
 summary['Trace Dir'] = params.tracedir
 summary['Seq Type'] = params.seqType
-summary['Clean up'] = params.tidy
+//summary['Clean up'] = params.tidy
 /*summary['Max Cores'] = task.cpus*/
-summary['geneId'] = geneId
+//summary['geneId'] = geneId
 summary['sjdb GTF File'] = sjdbGTFFile
 summary['ref Flat File'] = refFlatFile
 summary['Ribosomal Intervals'] = ribosomalIntervalFile
@@ -74,20 +74,42 @@ log.info bioradHeader()
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
 log.info "----------------------------------------------------"
 
-reads = params.reads+"*{R1,R2}*"
+if(params.seqType =="SE"){
+	reads = params.reads+"*_R1*"
+	params.skipUmi =true
+}
+else{
+	reads = params.reads+"*{R1,R2}*"
+}
 
 Channel
     .fromFilePairs( reads, size:-1)
     .ifEmpty { exit 1, "Cannot find any reads in illumina format in dir: $reads\nIf not using R2 please use --seqType SE" }
     .set { read_files}
 
-read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation; raw_reads_dead}
+
+if(params.seqType =="SE"){
+	process rename_tuple{
+		input:
+		set sid, file(fastq) from read_files
+		output:
+		set stdout, file(reads) into raw_reads_fastqc, raw_reads, raw_reads_validation
+		script:
+		reads = fastq
+		"""
+		echo ${sid} | sed "s/\\(_\\)R1.*//g" | xargs printf
+		"""	
+	}
+}
+else{
+	read_files.into{ raw_reads_fastqc; raw_reads; raw_reads_validation; raw_reads_dead}
+}
 // Begin Processing
 
 if (params.validateInputs) {
     process validateInputs {
         tag "Validation on $sample_id"
-        publishDir "${params.outDir}/$sample_id/validation", mode: 'copy'
+        publishDir "${params.outDir}/Sample_Files/$sample_id/validation", mode: 'copy'
 
         input:
         set sample_id, file(reads) from raw_reads_validation
@@ -100,7 +122,7 @@ if (params.validateInputs) {
 }
 process fastQc {
     tag "FASTQC on $sample_id"
-    publishDir "${params.outDir}/$sample_id/fastqc", mode: 'copy',
+    publishDir "${params.outDir}/Sample_Files/$sample_id/fastqc", mode: 'copy',
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
 
     input:
@@ -122,7 +144,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 	label 'mid_cpu'
 	label 'mid_mem'
 	tag "debarcode DEAD on $sample_id"
-	publishDir "${params.outDir}/$sample_id/debarcode", mode: 'copy'
+	publishDir "${params.outDir}/Sample_Files/$sample_id/debarcode", mode: 'copy'
 
 	input:
 	set sample_id, file(reads) from raw_reads
@@ -144,7 +166,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 process cutAdapt {
     label 'mid_cpu'
     tag "cutAdapt on $name"
-    publishDir "${params.outDir}/$name/cutAdapt", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/cutAdapt", mode: 'copy'
 
     input:
     set val(name), file(reads) from debarcoded_ch
@@ -193,7 +215,7 @@ process starAlign {
     label 'high_memory'
     label 'mid_cpu'
     tag "starAlign on $name"
-    publishDir "${params.outDir}/$name/star", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/star", mode: 'copy'
 
 
     input:
@@ -234,7 +256,7 @@ process starAlign {
 process picardAlignSummary {
     label 'low_memory'
     tag "picardAlignSummary on $name"
-    publishDir "${params.outDir}/$name/picardAlignSummary", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/picardAlignSummary", mode: 'copy'
 
     input:
     set val(name), file(bams) from picardBam_ch
@@ -288,7 +310,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 	label 'high_memory'
 	label 'mid_cpu'
 	tag "rumi dedup on $name"
-	publishDir "${params.outDir}/$name/dedup", mode: 'copy'
+	publishDir "${params.outDir}/Sample_Files/$name/dedup", mode: 'copy'
 	
 	input:
 	set val(name), file(bams) from dedup_in_ch
@@ -325,15 +347,14 @@ process count_rna {
     label 'mid_cpu'
     label 'low_memory'
     tag "countLongRNA on $name"
-    publishDir "${params.outDir}/$name/RNACounts", mode: 'copy'
+    publishDir "${params.outDir}/Sample_Files/$name/RNACounts", mode: 'copy'
 
     input:
     set val(name), file(bam) from BamLong_ch
     file longRNAgtfFile
     
     output:
-    val(name) into (counts_name, xls_name, threshold_name)
-    file "gene_counts_longRNA*" into (counts_ch, counts_xls, count_threshold_ch)
+    set val(name),file ("gene_counts_longRNA.$name") into counts_ch, counts_xls,count_threshold_ch
     file "*.$name" into report_longRNACounts
     file "*.featureCounts.bam"
 
@@ -349,27 +370,25 @@ process count_rna {
     -a $longRNAgtfFile \
     -o ./gene_counts_longRNA \
     -R BAM $just_bam
-    cp gene_counts_longRNA.summary gene_counts_longRNA.summary.$name
-    cp gene_counts_longRNA gene_counts_longRNA.$name
+    mv gene_counts_longRNA.summary gene_counts_longRNA.summary.$name
+    mv gene_counts_longRNA gene_counts_longRNA.$name
     """
 }
 
-process calcRPMKTPM {
+process calcRPKMTPM {
     label 'low_memory'
     label 'low_cpu'
-    tag "calcRPMKTPM on $name"
-    publishDir "${params.outDir}/$name/calcRPMKTPM", mode: 'copy'
+    tag "calcRPKMTPM on $name"
+    publishDir "${params.outDir}/Sample_Files/$name/calcRPKMTPM", mode: 'copy'
     input:
-    val name from counts_name
-    file(counts) from counts_ch
+    set val(name), file(counts) from counts_ch
 
     output:
-    file 'gene_counts_rpkmtpm.txt' into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
-    val name into thresh_ch
+    set val(name),file('gene_counts_rpkmtpm.txt') into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
 
     script:
     """
-    python3 /opt/biorad/src/calc_rpkm_tpm.py gene_counts_longRNA ./gene_counts_rpkmtpm.txt
+    python3 /opt/biorad/src/calc_rpkm_tpm.py $counts ./gene_counts_rpkmtpm.txt
     """
 
 }
@@ -377,15 +396,13 @@ if(params.minGeneType != "none"){
         process thresholdResults{
                 label 'low_memory'
                 tag 'thresholdGenes'
-                publishDir "${params.outDir}/$name/RNACounts", mode:'copy'
+                publishDir "${params.outDir}/Sample_Files/$name/RNACounts", mode:'copy'
 
                 // take in user specified cutoff and type and generate appropriate report
                 // should also include biotype 
                 input:
-		val name from thresh_ch
-		file ("./out/") from rpkm_threshold_ch 
-		file ("./out/") from count_threshold_ch	
-
+		set val(name), file(rpkm) ,file(counts) from rpkm_threshold_ch.join(count_threshold_ch, by:0)
+		file annoDirPath
                 output:
                 file "Full_count_table.csv"
                 file "Filter_count_table.csv"
@@ -393,9 +410,12 @@ if(params.minGeneType != "none"){
 
                 script:
                 """
+		mkdir -p ./out/
+		mv $rpkm ./out/
+		mv $counts ./out/gene_counts_longRNA
 		mkdir -p ./tmp
-                cp /opt/biorad/src/threshold_report.R ./tmp/threshold_report.R
-                Rscript ./tmp/threshold_report.R "${params.minGeneType}" "${params.minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+                cp /opt/biorad/src/threshold_results.R ./tmp/threshold_results.R
+                Rscript ./tmp/threshold_results.R "${params.minGeneType}" "${params.minGeneCutoff}" \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
 		cp Filter_count_table.csv Filter_count_table.csv.$name                
                 """
         }
@@ -408,7 +428,7 @@ else{
 process assembleReport {
     label 'low_memory'
     tag "assembleReport"
-    publishDir "${params.outDir}/reports", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
+    publishDir "${params.outDir}/report", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
 
     input:
     file annoDirPath
@@ -441,12 +461,10 @@ process assembleReport {
 process combinedXLS{
 	label 'low_memory'
 	tag "countsAsXls"
-	publishDir "${params.outDir}/$name/calcRPMKTPM", mode:'copy'
+	publishDir "${params.outDir}/Sample_Files/$name/calcRPMKTPM", mode:'copy'
 
 	input:
-	file rpkm from normalize_xls
-	val(name) from xls_name 
-        file(count_file) from counts_xls
+	set val(name), file(count_file), file(rpkm) from counts_xls.join(normalize_xls, by: 0)
 
 	output:
 	file "readcount_report.xlsx"
@@ -455,13 +473,13 @@ process combinedXLS{
 	
 	script:
 	"""
-	python3 /opt/biorad/src/converge_xls.py gene_counts_longRNA $rpkm 
+	python3 /opt/biorad/src/converge_xls.py $count_file $rpkm 
 	"""
 
 }
 process metaReport{
 	tag "Overall Batch Summary"
-	publishDir "${params.outDir}/", mode:'copy'
+	publishDir "${params.outDir}/report", mode:'copy'
 	// generate a high level summary of batch run
 	
 	input:
@@ -485,26 +503,6 @@ process metaReport{
 	cp ./tmp/batch_pdf.pdf ./batch_summary.pdf
 	"""
 }
-if(params.tidy == true){
-	process tidy_up{
-		afterScript 'bash /opt/biorad/src/cleanup.sh "${workflow.workDir}"'
-
-		input: 
-		val m from meta_complete
-		val r from report_complete
-		val x from xls_complete
-		
-		script:
-		"""
-		
-		echo "${workflow.workDir}"
-		""" 
-
-	}
-	workflow.onComplete{
-		clean
-	}
-}
 
 /* Helper Functions */
 def readParamsFromJsonSettings() {
@@ -519,7 +517,7 @@ def readParamsFromJsonSettings() {
 }
 
 def tryReadParamsFromJsonSettings() throws Exception {
-    def paramsContent = new File(config.params_description.path).text
+    def paramsContent = new File(params.settings).text
     def paramsWithUsage = new groovy.json.JsonSlurper().parseText(paramsContent)
     return paramsWithUsage.get('parameters')
 }
