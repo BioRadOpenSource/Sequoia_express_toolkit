@@ -2,7 +2,7 @@
 def paramsWithUsage = readParamsFromJsonSettings()
 
 // Constants
-acceptableGenomes = ["rnor6", "hg38", "mm10","tair10","R64-1-1","dm3","danRer7","ce10"]
+acceptableGenomes = ["rnor6", "hg38", "mm10","tair10","sacCer3","dm6","danRer11","ce11"]
 allowedSpikes     = ["ercc"]
 
 // Show help emssage
@@ -460,7 +460,7 @@ process assembleReport {
 }
 process combinedXLS{
 	label 'low_memory'
-	tag "countsAsXls"
+	tag "countsAsXls on $name"
 	publishDir "${params.outDir}/Sample_Files/$name/calcRPMKTPM", mode:'copy'
 
 	input:
