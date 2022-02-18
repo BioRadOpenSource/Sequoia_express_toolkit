@@ -45,7 +45,7 @@
 			"type": "string",
 			"renderer": "drop-down",
 			"group": "options",
-			"choices": ["hg38", "mm10", "rnor6","tair10","R64-1-1","dm3","danRer7","ce10"],
+			"choices": ["hg38", "mm10", "rnor6","tair10","sacCer3","dm6","danRer11","ce11"],
 			"required": true
 		},
 		{
