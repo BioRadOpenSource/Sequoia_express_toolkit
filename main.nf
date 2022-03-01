@@ -452,7 +452,7 @@ process assembleReport {
     cp /opt/biorad/src/htmlReport.R ./tmp/htmlReport.R
     cp /opt/biorad/src/pdfReport.R ./tmp/pdfReport.R
     cp /opt/biorad/src/csvReport.R ./tmp/csvReport.R
-    Rscript /opt/biorad/src/generateRmdReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath)
+    Rscript /opt/biorad/src/generateRmdReport.R \$(readlink -f ./out) \$(readlink -f ./tmp)  \$(readlink -f $annoDirPath) ${params.genome}
     cp ./tmp/*_htmlReport.html ./
     cp ./tmp/*_pdfReport.pdf ./
     cp ./tmp/*_csvReport.csv ./
