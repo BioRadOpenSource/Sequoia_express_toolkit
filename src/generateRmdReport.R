@@ -200,7 +200,7 @@ for(n in names){
 		        referenceGenome = "NA"
 	}
 	#isErcc <- any(grepl("ercc", anno_path))
-	isErcc <- spikedin
+	isErcc <- spikedin == "ercc"
 	write(paste("Preparing to read: ", paste(anno_dir,"annotation_version.txt", sep="/")), stderr())
 	anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), comment.char="", fill=T, sep=",")
 	write("Read annotation_version", stderr())
