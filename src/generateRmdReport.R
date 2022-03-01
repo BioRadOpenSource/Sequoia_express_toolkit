@@ -182,7 +182,7 @@ for(n in names){
 
 	}
 
-	env <- Sys.getenv(c("Software Name","FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION"))
+	env <- Sys.getenv(c("Software Name","FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION", "SAMBAMBA_VERSION"))
 	env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
 	umi_tools_version <- system("rumi -V", intern=T)
 	umi_tools_version <- strsplit(umi_tools_version, " ")[[1]][2]
