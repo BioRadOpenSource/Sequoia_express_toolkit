@@ -15,6 +15,8 @@ comArgs <- commandArgs(TRUE)
 base_dir <- comArgs[1]
 temp_dir <- comArgs[2]
 anno_dir <- comArgs[3]
+genomeid <- comArgs[4]
+spikedin <- comArgs[5]
 
 names = system("ls ./out/counts/",intern=T ) 
 names = unlist(lapply(names, function(x) unlist(strsplit(x, "\\."))[3]))
@@ -180,7 +182,7 @@ for(n in names){
 
 	}
 
-	env <- Sys.getenv(c("Software Name","FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION","SAMBAMBA_VERSION"))
+	env <- Sys.getenv(c("Software Name","FASTQC_VERSION","STAR_VERSION","PICARD_VERSION","RUMI_VERSION","SUBREAD_VERSION", "SAMBAMBA_VERSION"))
 	env <- as.data.frame(env, stringsAsFactors=FALSE) %>% tibble::rownames_to_column()
 	umi_tools_version <- system("rumi -V", intern=T)
 	umi_tools_version <- strsplit(umi_tools_version, " ")[[1]][2]
@@ -191,12 +193,14 @@ for(n in names){
 	containerInfo <- data.frame("rowname" = containerInfo[,1], env = containerInfo[,2], stringsAsFactors=FALSE)
 	containerInfo[3,2] <- substr(containerInfo[3,2], 1,8)
 	anno_path <- unlist(strsplit(anno_dir,"/"))
-	referenceGenome <- anno_path[grepl("hg38|mm10|rnor6", anno_path)]
+	#referenceGenome <- anno_path[grepl("hg38|mm10|rnor6|tair10|sacCer3|dm6|danRer11|ce11", anno_path)]
+	referenceGenome <- genomeid
 	if(length(referenceGenome) == 0)
 	{
 		        referenceGenome = "NA"
 	}
-	isErcc <- any(grepl("ercc", anno_path))
+	#isErcc <- any(grepl("ercc", anno_path))
+	isErcc <- spikedin == "ercc"
 	write(paste("Preparing to read: ", paste(anno_dir,"annotation_version.txt", sep="/")), stderr())
 	anno_version <- read.table(paste(anno_dir,"annotation_version.txt", sep="/"), comment.char="", fill=T, sep=",")
 	write("Read annotation_version", stderr())
