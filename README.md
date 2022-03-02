@@ -37,16 +37,13 @@ nextflow clean -h
 The reference genomes are stored in S3 for convenience. As of this writing. The reference genome can be found here: s3://dbg-cloudpipeline-data-us-west-2-prod/ref\_data/sequoia\_analysis/latest/.
 
 It is suggested that you copy the tar of the reference that you want locally. These commands will take a while to run.
+For full list of options see: [Sequoia Genomess](https://www.dropbox.com/sh/kqy6kt9qewqsmbl/AABSjlIs87-cWMLdLPd8eDOja?dl=0) 
+When downloading from Dropbox it will add ?dl=0 this needs to be removed 
 ```
-mkdir /mnt/ref_data/genome-annotations
-cd /mnt/ref_data/genome-annotations
-aws s3 cp s3://dbg-cloudpipeline-data-us-west-2-prod/ref_data/sequoia_analysis/latest/hg38.tar.gz ./
-aws s3 cp s3://dbg-cloudpipeline-data-us-west-2-prod/ref_data/sequoia_analysis/latest/mm10.tar.gz ./
-aws s3 cp s3://dbg-cloudpipeline-data-us-west-2-prod/ref_data/sequoia_analysis/latest/rnor6.tar.gz ./
+mkdir ./ref_data/genome-annotations
+cd ./ref_data/genome-annotations
+wget -O hg38.tar.gz https://www.dropbox.com/s/hm6kyp70dtbqovr/hg38.tar.gz?dl=0
 tar xvzf hg38.tar.gz
-tar xvzf rnor6.tar.gz
-tar xvzf mm10.tar.gz
-md5sum -c ./*/*.chk
 ```
 
 ### Running the pipeline 
