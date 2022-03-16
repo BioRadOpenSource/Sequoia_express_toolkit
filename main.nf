@@ -165,6 +165,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 
 process cutAdapt {
     label 'mid_cpu'
+    label 'mid_memory'
     tag "cutAdapt on $name"
     publishDir "${params.outDir}/Sample_Files/$name/cutAdapt", mode: 'copy'
 
