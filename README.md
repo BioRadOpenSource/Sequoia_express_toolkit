@@ -1,13 +1,13 @@
 ![Bio-Rad Laboratories](src/vendor-logo.png?raw=true "Title")
 
-# Sequoia Express Toolkit
-Analysis toolkit for Sequoia Express RNAseq kits 
+# SEQuoia Express Toolkit
+Analysis toolkit for SEQuoia Express Stranded RNA-Seq kits 
 
-## Docker Enviorment
-To use the toolkit a virtual enviorement is required to run the software, prepared here as a docker container. To use please ensure docker is both installed and running. Either generate (via docker build) or retieve (docker pull) the container to continue. Please note that that nextflow can call docker directly and will be able to pull the container automatically.
+## Docker Environment
+To use the toolkit a virtual environment is required to run the software, prepared here as a docker container. To use please ensure docker is both installed and running. Either generate (via docker build) or retrieve (docker pull) the container to continue. Please note that that nextflow can call docker directly and will be able to pull the container automatically.
 
 ## Analysis via Nextflow
-Nextflow is the primary software the runs and coodinates the pipeline (groovy / Java language base) so you will need Java 8 or higher with nextflow installed to run.
+Nextflow is the primary software the runs and coordinates the pipeline (groovy / Java language base) so you will need Java 8 or higher with nextflow installed to run.
 
 ### Installing Nextflow 
 ```
@@ -21,7 +21,7 @@ conda install -c bioconda nextflow
 ```
 
 ### Cleanup the Work Directory
-When running the toolkit, nextflow will produce intermediate files required to complete the processes. To do this please follow the instuctions from nextflow. There are options to keep the logs or to do as part of a run after complete. 
+When running the toolkit, nextflow will produce intermediate files required to complete the processes. To do this please follow the instructions from nextflow. There are options to keep the logs or to do as part of a run after complete. 
 One example would be:
 ```
 nextflow clean -f ./work
@@ -47,10 +47,10 @@ tar xvzf hg38.tar.gz
 ```
 
 ### Running the pipeline 
-For the majority of users there are only some basic commands that will need to be done. For a full list of options, please see the nextflow.config file. Using `nextflow run main.nf --help` will only list the basic options. 
+For most users there are only some basic commands that will need to be done. For a full list of options, please see the nextflow.config file. Using `nextflow run main.nf --help` will only list the basic options. 
 
 #### Generate the Docker Image
-This pipeline uses a docker conainer as a virtual enviorment to run the software. Outside of installing docker and nextflow, no other software is required. The recommendation for running this analysis is to pull the docker container from dockerhub. However, should the user choose to modify the docker container for a customized analysis, the Dockerfile is provided in this repository. 
+This pipeline uses a docker container as a virtual environment to run the software. Outside of installing docker and nextflow, no other software is required. The recommendation for running this analysis is to pull the docker container from dockerhub. However, should the user choose to modify the docker container for a customized analysis, the Dockerfile is provided in this repository. 
 
 (Recommended) the container should be pulled automatically by nextflow, however this is the command required if needed: 
 
@@ -120,15 +120,15 @@ OPTIONAL:
 
 ### Basic updates
 This pipeline has been set up with multiple-sample bulk runs in mind, meaning that the predecessor Sequoia Complete took one file at time while this pipeline takes a whole directory of files at the same time. 
-With this however your fastq files must have at a minium R1 / R2 in the file name to specify that they are paired reads.
+With this however your fastq files must have at a minimum R1 / R2 in the file name to specify that they are paired reads.
 
 ### Expected Outputs
-This pipeline creates output similar to those used for Sequoia Complete, each individual sample will have a report in csv, html, and pdf formats. Additionally, each batch that is run will have its own high level report that is created to have a side by side comparision of metrics as well.
+This pipeline creates output like those used for Sequoia Complete, each individual sample will have a report in csv, html, and pdf formats. Additionally, each batch that is run will have its own high-level report that is created to have a side by side comparison of metrics as well.
 
 ## Support
-If you encounter an error / bug / issue please contact support@bio-rad.com or submit and issue to this repository so that we can address it.
+If you encounter an error / bug / issue, please contact support@bio-rad.com or submit and issue to this repository so that we can address it.
 
 ### Tips and Tricks
-If you find that you are getting an error where nextflow can not find you files check your path, and if needed use an absolute path, or check the formatting on your relative path. Also check your reads have R1 / R2 (in caps) and end with .fastq or fastq.gz
+If you find that you are getting an error where nextflow cannot find you files check your path, and if needed use an absolute path, or check the formatting on your relative path. Also check your reads have R1 / R2 (in caps) and end with .fastq or fastq.gz
 
 The pipeline runs with paired end as default (assumes you have both R1 and R2) if this is not the case you can run --seqType=SE to use just the R1 reads 
