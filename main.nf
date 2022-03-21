@@ -467,7 +467,7 @@ process combinedXLS{
 	label 'low_memory'
 	label 'micro_cpu'
 	tag "countsAsXls on $name"
-	publishDir "${params.outDir}/Sample_Files/$name/calcRPMKTPM", mode:'copy'
+	publishDir "${params.outDir}/Sample_Files/$name/calcRPKMTPM", mode:'copy'
 
 	input:
 	set val(name), file(count_file), file(rpkm) from counts_xls.join(normalize_xls, by: 0)
