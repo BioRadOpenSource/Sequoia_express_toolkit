@@ -122,6 +122,7 @@ if (params.validateInputs) {
 }
 process fastQc {
     tag "FASTQC on $sample_id"
+    label 'micro_cpu' 
     publishDir "${params.outDir}/Sample_Files/$sample_id/fastqc", mode: 'copy',
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
 
@@ -141,8 +142,8 @@ process fastQc {
 if (!params.skipUmi && params.seqType=="PE") {
     
     process debarcode{
-	label 'mid_cpu'
-	label 'mid_mem'
+	label 'micro_cpu'
+	label 'low_memory'
 	tag "debarcode DEAD on $sample_id"
 	publishDir "${params.outDir}/Sample_Files/$sample_id/debarcode", mode: 'copy'
 
@@ -164,7 +165,8 @@ if (!params.skipUmi && params.seqType=="PE") {
 }
 
 process cutAdapt {
-    label 'mid_cpu'
+    label 'low_cpu'
+    label 'mid_memory'
     tag "cutAdapt on $name"
     publishDir "${params.outDir}/Sample_Files/$name/cutAdapt", mode: 'copy'
 
@@ -255,6 +257,7 @@ process starAlign {
 
 process picardAlignSummary {
     label 'low_memory'
+    label 'micro_cpu'
     tag "picardAlignSummary on $name"
     publishDir "${params.outDir}/Sample_Files/$name/picardAlignSummary", mode: 'copy'
 
@@ -282,7 +285,7 @@ process picardAlignSummary {
 
 if (!params.skipUmi && params.seqType=="PE") {
     process umiTagging {
-        label 'mid_cpu'
+        label 'low_cpu'
         label 'mid_memory'
         tag "umiTagging on $name"
         //publishDir "${params.outDir}/$name/umiTagging", mode: 'copy'
@@ -344,7 +347,7 @@ if (!params.skipUmi && params.seqType=="PE") {
 
 
 process count_rna {
-    label 'mid_cpu'
+    label 'low_cpu'
     label 'low_memory'
     tag "countLongRNA on $name"
     publishDir "${params.outDir}/Sample_Files/$name/RNACounts", mode: 'copy'
@@ -395,6 +398,7 @@ process calcRPKMTPM {
 if(params.minGeneType != "none"){
         process thresholdResults{
                 label 'low_memory'
+		label 'micro_cpu'
                 tag 'thresholdGenes'
                 publishDir "${params.outDir}/Sample_Files/$name/RNACounts", mode:'copy'
 
@@ -427,6 +431,7 @@ else{
 
 process assembleReport {
     label 'low_memory'
+    label 'micro_cpu'
     tag "assembleReport"
     publishDir "${params.outDir}/report", mode: 'copy' // TODO: Filter down the outputs since so much stuff will be in this dir
 
@@ -460,8 +465,9 @@ process assembleReport {
 }
 process combinedXLS{
 	label 'low_memory'
+	label 'micro_cpu'
 	tag "countsAsXls on $name"
-	publishDir "${params.outDir}/Sample_Files/$name/calcRPMKTPM", mode:'copy'
+	publishDir "${params.outDir}/Sample_Files/$name/calcRPKMTPM", mode:'copy'
 
 	input:
 	set val(name), file(count_file), file(rpkm) from counts_xls.join(normalize_xls, by: 0)
@@ -479,6 +485,7 @@ process combinedXLS{
 }
 process metaReport{
 	tag "Overall Batch Summary"
+	label 'micro_cpu'
 	publishDir "${params.outDir}/report", mode:'copy'
 	// generate a high level summary of batch run
 	
