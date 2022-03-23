@@ -96,7 +96,7 @@ Args:
 REQUIRED:
     genome               (string )           Genome to align to and annotate against                                                                 [hg38, mm10, rnor6]       
     genomes_base         (string )           Bio-Rad formatted refence genomes and annotations                                                                                 
-    reads                (string )           Tese must be wrapped in single quotes. If R{1,2} is specified, UMI dedu$lication processes will be run.                           
+    reads                (string )           These must be wrapped in single quotes.                           
 
 OPTIONAL:
     fivePrimeQualCutoff  (integer)           The read quality below which bases will be trimmed on the 5' end        		                     [0, 42]                   
@@ -110,8 +110,8 @@ OPTIONAL:
     outDir               (string ) ./results Indicate the output directory to write to                                                                                         
     reverseStrand        (boolean)           Indicate if your library is reverse stranded                            
                                                           
-    seqType              (string )           Provide sequecing method used                                                                           [SE, PE]                  
-    skipUmi              (boolean)           Indicate that only R1 has been passed in and no UMI processing is required                                                        
+    seqType              (string )           Provide sequencing method used, if SE provided deduplication will not occur                             [SE, PE]                  
+    skipUmi              (boolean)           Indicate no UMI processing is required                                                        
     spikeType            (string ) NONE      The type of spike in used, if any                                                                       [NONE, ercc]              
     threePrimeQualCutoff (integer)           The read quality below which bases will be trimmed on the 3' end                                        [0, 42]                   
     validateInputs       (boolean) true      Ensure input meets standards and is below 500 million reads
@@ -129,6 +129,6 @@ This pipeline creates output like those used for Sequoia Complete, each individu
 If you encounter an error / bug / issue, please contact support@bio-rad.com or submit and issue to this repository so that we can address it.
 
 ### Tips and Tricks
-If you find that you are getting an error where nextflow cannot find you files check your path, and if needed use an absolute path, or check the formatting on your relative path. Also check your reads have R1 / R2 (in caps) and end with .fastq or fastq.gz
+If you find that you are getting an error where nextflow cannot find your files, check your path, and if needed use an absolute path, or check the formatting on your relative path. Also check your reads have R1 / R2 (in caps) and end with .fastq or fastq.gz
 
 The pipeline runs with paired end as default (assumes you have both R1 and R2) if this is not the case you can run --seqType=SE to use just the R1 reads 
