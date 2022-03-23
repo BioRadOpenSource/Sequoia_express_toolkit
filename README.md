@@ -96,7 +96,7 @@ Args:
 REQUIRED:
     genome               (string )           Genome to align to and annotate against                                                                 [hg38, mm10, rnor6]       
     genomes_base         (string )           Bio-Rad formatted refence genomes and annotations                                                                                 
-    reads                (string )           These must be wrapped in single quotes.                           
+    reads                (string )           The path to the fastq files must be wrapped in single quotes.                           
 
 OPTIONAL:
     fivePrimeQualCutoff  (integer)           The read quality below which bases will be trimmed on the 5' end        		                     [0, 42]                   

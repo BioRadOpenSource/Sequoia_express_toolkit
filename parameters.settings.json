@@ -4,7 +4,7 @@
 		{
 			"name": "reads",
 			"label": "Path to fastq reads",
-			"usage": "These must be wrapped in single quotes. If R{1,2} is specified, UMI deduplication processes will be run.",
+			"usage": "The path to the fastq files must be wrapped in single quotes.",
 			"type": "string",
 			"renderer": "file",
 			"group": "invisible",
@@ -32,7 +32,7 @@
 		{
 			"name": "skipUmi",
 			"label": "Skip UMI processing",
-			"usage": "Indicate that only R1 has been provided and no UMI processing is required",
+			"usage": "Indicate no UMI processing is required",
 			"type": "boolean",
 			"renderer": "check-box",
 			"default_value": false,
@@ -149,7 +149,7 @@
 		{
 			"name": "seqType",
 			"label": "Option to define type of sequencing used (Paired vs Single end)",
-			"usage": "Provide sequecing method used",
+			"usage": "Provide sequencing method used, if using SE provided deduplication will not occur",
 			"type": "string",
 			"renderer": "check-box",
 			"defualt_value": "PE", 
