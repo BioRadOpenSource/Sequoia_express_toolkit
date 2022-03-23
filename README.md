@@ -35,7 +35,7 @@ nextflow clean -h
 It is suggested that you copy the tar of the reference that you want locally. These commands will take a while to run.
 For full list of options see: [Sequoia Genomes](https://www.dropbox.com/sh/kqy6kt9qewqsmbl/AABSjlIs87-cWMLdLPd8eDOja?dl=0) 
 
-When downloading from Dropbox, it will add `?dl=0` to the end of each link. This needs to be removed. this can be done manually, however using the output option in wget -O you can rename the file to match what is expected in the use case of the hg38 genome, see the example below where the dropbox link with the `?dl=0` can be saved as the expected hg38.tar.gz with the -O option. 
+When downloading from Dropbox, it will add `?dl=0` to the end of each link. This needs to be removed. this can be done manually, however using the output option in wget -O you can rename the file to match what is expected. In the use case of the hg38 genome, see the example below where the dropbox link with the `?dl=0` can be saved as the expected hg38.tar.gz with the -O option. 
  
 ```
 mkdir ./ref_data/genome-annotations
