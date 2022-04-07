@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:bionic-20220401
 
 LABEL Bio-Rad Support <support@bio-rad.com>
 
@@ -141,12 +141,14 @@ RUN Rscript -e 'install.packages("XML", repos = "http://www.omegahat.net/R")'
 RUN Rscript -e 'install.packages(c("dplyr", "knitr", "rmarkdown", "kableExtra", "ggplot2", "plotly", "fastqcr", "data.table", "tibble", "rlist", "tinytex", "webshot", "DT"), repos = "http://cran.r-project.org")'
 RUN Rscript -e 'tinytex::install_tinytex()'
 RUN Rscript -e 'webshot::install_phantomjs()'
-RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell", "titling","mathspec"))'
+RUN Rscript -e 'tinytex::tlmgr_update()'
+RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell", "titling","mathspec","fancyhdr"))'
 ######### End R Setup ###########
 
 #Integrate RUST for DEAD and rumi#########
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN apt-get install -y clang 
+RUN apt-get update
+RUN apt-get install -f -y clang
 	
 RUN export LIBCLANG_PATH=/usr/lib32/
  
