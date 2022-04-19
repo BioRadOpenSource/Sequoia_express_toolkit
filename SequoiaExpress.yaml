@@ -1,0 +1,38 @@
+name: SequoiaExpress
+channels:
+  - conda-forge
+  - bioconda 
+  - pkgw-forge
+  - anaconda
+dependencies:
+  - FASTQC=0.11.7
+  - cutadapt=2.7
+  - STAR=2.7.0f
+  - PICARD=2.20.0
+  - SUBREAD=1.6.4
+  - SAMBAMBA=0.6.9
+  - samtools
+  - openjdk=11
+  - r-base=3.6.3
+  - python=3.6.9
+  - r-XML
+  - r-dplyr
+  - r-knitr
+  - r-rmarkdown
+  - r-kableExtra
+  - r-ggplot2
+  - r-plotly
+  - r-fastqcr
+  - r-data.table
+  - r-tibble
+  - r-rlist
+  - r-tinytex
+  - r-webshot
+  - r-DT
+  - pip
+  - clang
+  - rust
+  - cargo
+  - curl
+  - pandoc
+  - openssl
