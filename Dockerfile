@@ -15,17 +15,17 @@ COPY $CONDA_ENV.yaml /opt/biorad/env/
 RUN conda env create -f /opt/biorad/env/$CONDA_ENV.yaml && \
 	conda clean -afy
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    perl \
-    parallel \
-    pigz \
-    wget \
+#RUN apt-get update && apt-get install -y \
+#    curl \
+#    unzip \
+#    perl \
+#    parallel \
+#    pigz \
+#    wget \
 #    samtools \
-    zlib1g-dev \
-    libbz2-dev \
-    liblzma-dev
+#    zlib1g-dev \
+#    libbz2-dev \
+#    liblzma-dev
 
 ######### Fix time and date interaction
 ######################################
@@ -107,15 +107,15 @@ RUN apt-get update && apt-get install -y \
 #####################################
 
 ######### Pysam Setup ################
-RUN pip3 install pysam
+#RUN pip3 install pysam
 ######### End Pysam Setup ############
 
 ######### RPKM/TPM Setup #############
-RUN pip3 install pandas
+#RUN pip3 install pandas
 ######### End RPKM/TPM Setup #########
 
 ######### pythong excel info ########
-RUN pip3 install openpyxl
+#RUN pip3 install openpyxl
 
 ####################################
 
@@ -147,10 +147,10 @@ RUN pip3 install openpyxl
 #RUN apt-get install -y r-base -q
 #RUN Rscript -e 'install.packages("XML", repos = "http://www.omegahat.net/R")'
 #RUN Rscript -e 'install.packages(c("dplyr", "knitr", "rmarkdown", "kableExtra", "ggplot2", "plotly", "fastqcr", "data.table", "tibble", "rlist", "tinytex", "webshot", "DT"), repos = "http://cran.r-project.org")'
-RUN Rscript -e 'tinytex::install_tinytex()'
-RUN Rscript -e 'webshot::install_phantomjs()'
-RUN Rscript -e 'tinytex::tlmgr_update()'
-RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell", "titling","mathspec","fancyhdr"))'
+#RUN Rscript -e 'tinytex::install_tinytex()'
+#RUN Rscript -e 'webshot::install_phantomjs()'
+#RUN Rscript -e 'tinytex::tlmgr_update()'
+#RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow", "wrapfig", "float", "tabu", "varwidth", "threeparttable", "threeparttablex", "environ", "trimspaces", "ulem", "makecell", "titling","mathspec","fancyhdr"))'
 ######### End R Setup ###########
 
 #Integrate RUST for DEAD and rumi#########
@@ -159,16 +159,28 @@ RUN Rscript -e 'tinytex::tlmgr_install(pkgs = c("xcolor", "colortbl", "multirow"
 #RUN apt-get install -f -y clang
 	
 #RUN export LIBCLANG_PATH=/usr/lib32/
- 
+
+RUN rm root/.bashrc
+RUN echo "source /etc/container.bashrc" >> /etc/bash.bashrc && \
+	echo "set +u" > /etc/container.bashrc && \
+	echo ". /opt/conda/etc/profile.d/conda.sh" >> /etc/container.bashrc && \
+	echo "conda activate $CONDA_ENV" >> /etc/container.bashrc
+
+# Activating environment when using non-login, non-interactive shell
+ENV BASH_ENV /etc/container.bashrc
+ENV ENV /etc/container.bashrc
+
+# Adding Bio-Rad bin to path
+ENV PATH /opt/biorad/bin/:$PATH
 
 WORKDIR /opt/biorad
 
 COPY . .
 
 #install rumi and DEAD
-RUN ["/bin/bash", "-c", "source ~/.cargo/env"]
-RUN apt-get update -y
-RUN apt-get install git -y
+#RUN ["/bin/bash", "-c", "source ~/.cargo/env"]
+#RUN apt-get update -y
+#RUN apt-get install git -y
 #RUN cargo install src/rumi/
 ENV PATH=$PATH:/opt/biorad/src
 
