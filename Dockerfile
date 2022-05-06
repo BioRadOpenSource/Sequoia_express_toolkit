@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:4.7.12
+FROM condaforge/mambaforge:4.12.0-0
 
 # Building image using bash shell
 SHELL ["/bin/bash", "-c"]
@@ -8,13 +8,16 @@ ARG CONDA_ENV="SequoiaExpress"
 LABEL Bio-Rad Support <support@bio-rad.com>
 
 RUN apt-get --allow-releaseinfo-change update && \
-	apt-get install -y procps=2:3.3.15-2 && \
+#	apt-get install -y procps=2:3.3.15-2 && \
 	apt-get clean -y
 
 COPY $CONDA_ENV.yaml /opt/biorad/env/
-RUN conda env create -f /opt/biorad/env/$CONDA_ENV.yaml && \
-	conda clean -afy
+RUN conda env create -f /opt/biorad/env/$CONDA_ENV.yaml
 
+RUN conda clean -afy
+
+#RUN conda update conda -y
+#RUN conda update --all
 #RUN apt-get update && apt-get install -y \
 #    curl \
 #    unzip \
@@ -177,12 +180,22 @@ WORKDIR /opt/biorad
 
 COPY . .
 
+
 #install rumi and DEAD
 #RUN ["/bin/bash", "-c", "source ~/.cargo/env"]
 #RUN apt-get update -y
 #RUN apt-get install git -y
 #RUN cargo install src/rumi/
 ENV PATH=$PATH:/opt/biorad/src
+ENV TZ=US
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get install texlive-xetex texlive-fonts-recommended texlive-plain-generic -y
+
+WORKDIR /opt/conda/envs/$CONDA_ENV/lib
+
+#fix for issues / conflict between samtools and pandoc / R 
+#samtools needs libcrypto.so.1.0.0 and wont accept other versions as of May22
+RUN cp libcrypto.so.1.1 libcrypto.so.1.0.0
 
 WORKDIR /opt/biorad 
 # Pull in some ARGS for defining container name

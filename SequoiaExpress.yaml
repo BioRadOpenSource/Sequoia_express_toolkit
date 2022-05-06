@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - bioconda 
   - defaults
+  - genomedk
 dependencies:
   - fastqc=0.11.9
   - cutadapt=2.7
@@ -11,13 +12,12 @@ dependencies:
   - subread=1.6.4
   - sambamba=0.6.9
   - samtools
-    #- openjdk=8.0.312
-  - r-base=3.6.3
-  - python=3.6.9
+  - openssl
+  - openjdk=>8.0.312
+  - python=>3.6
   - r-xml
   - r-dplyr
   - r-knitr
-  - r-rmarkdown
   - r-kableExtra
   - r-ggplot2
   - r-plotly
@@ -25,11 +25,18 @@ dependencies:
   - r-data.table
   - r-tibble
   - r-rlist
-  - r-tinytex
+  - r-base=>4.0.3
+  - r-rmarkdown=2.5
+  - r-tinytex=0.27
   - r-webshot
   - r-dt
   - pysam
   - pandas
   - openpyxl
   - rust
-  - xelatex
+  - nbconvert
+  - phantomjs
+  - r-essentials
+  - r-rjava
+  - pandoc=1.19.2
+  - open-fonts
