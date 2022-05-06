@@ -189,13 +189,15 @@ COPY . .
 ENV PATH=$PATH:/opt/biorad/src
 ENV TZ=US
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get install texlive-xetex texlive-fonts-recommended texlive-plain-generic -y
+RUN apt-get install texlive-xetex texlive-fonts-recommended texlive-plain-generic texlive-fonts-extra -y
 
 WORKDIR /opt/conda/envs/$CONDA_ENV/lib
 
 #fix for issues / conflict between samtools and pandoc / R 
 #samtools needs libcrypto.so.1.0.0 and wont accept other versions as of May22
 RUN cp libcrypto.so.1.1 libcrypto.so.1.0.0
+
+#pdf report wants freesans
 
 WORKDIR /opt/biorad 
 # Pull in some ARGS for defining container name

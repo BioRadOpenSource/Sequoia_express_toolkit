@@ -5,7 +5,7 @@
 #' header-includes:
 #' - \usepackage{titling}
 #' - \usepackage{fontspec}
-#' - \setmainfont{OpenSans}
+#' - \setmainfont{FreeSans}
 #' - \usepackage{booktabs}
 #' - \usepackage[table]{xcolor}
 #' - \usepackage{fancyhdr}
