@@ -36,6 +36,7 @@ ENV PATH=$PATH:/opt/biorad/src
 ENV TZ=US
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # add fonts needs for the pdf report
+RUN apt-get update
 RUN apt-get install texlive-xetex texlive-fonts-recommended texlive-plain-generic texlive-fonts-extra -y
 
 WORKDIR /opt/conda/envs/$CONDA_ENV/lib
