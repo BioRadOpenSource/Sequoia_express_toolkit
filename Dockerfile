@@ -46,12 +46,6 @@ WORKDIR /opt/conda/envs/$CONDA_ENV/lib
 RUN cp libcrypto.so.1.1 libcrypto.so.1.0.0
 
 WORKDIR /opt/biorad 
-#set up data needed for report 
-ENV FASTQC_VERSION=$(grep " fastqc" SequoiaExpress_lock.yaml| cut -d '=' -f2 )
-ENV STAR_VERSION=$(grep " star" SequoiaExpress_lock.yaml| cut -d '=' -f2 )
-ENV PICARD_VERSION=$(grep " picard" SequoiaExpress_lock.yaml| cut -d '=' -f2 )
-ENV SUBREAD_VERSION=$(grep " subread" SequoiaExpress_lock.yaml| cut -d '=' -f2 )
-ENV SAMBAMBA_VERSION=$(grep " sambamba" SequoiaExpress_lock.yaml| cut -d '=' -f2 )
 # Pull in some ARGS for defining container name
 ARG IMAGE_NAME
 ARG SOURCE_BRANCH

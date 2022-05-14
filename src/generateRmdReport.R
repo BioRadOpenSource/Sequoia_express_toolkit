@@ -187,6 +187,11 @@ for(n in names){
 	umi_tools_version <- system("rumi -V", intern=T)
 	umi_tools_version <- strsplit(umi_tools_version, " ")[[1]][2]
 	env[which(env$rowname=="RUMI_VERSION"), 2] = gsub(" ", "", umi_tools_version)
+	env[which(env$rowname=="FASTQC_VERSION"), 2] = system("grep ' fastqc' /opt/biorad/SequoiaExpress_lock.yaml| cut -d '=' -f2", intern=T)
+	env[which(env$rowname=="STAR_VERSION"), 2] = system("grep ' star' /opt/biorad/SequoiaExpress_lock.yaml| cut -d '=' -f2", intern=T)
+	env[which(env$rowname=="PICARD_VERSION"), 2] =system("grep ' picard' /opt/biorad/SequoiaExpress_lock.yaml| cut -d '=' -f2", intern=T)
+	env[which(env$rowname=="SUBREAD_VERSION"), 2] =system("grep ' subread' /opt/biorad/SequoiaExpress_lock.yaml| cut -d '=' -f2", intern=T)
+	env[which(env$rowname=="SAMBAMBA_VERSION"), 2] =system("grep ' sambamba' /opt/biorad/SequoiaExpress_lock.yaml| cut -d '=' -f2", intern=T)
 	write("Preparing to read imageInfo.txt", stderr())
 	containerInfo <- read.table("/opt/biorad/imageInfo.txt", stringsAsFactors=FALSE,sep=":")
 	write("Read imageInfo.txt", stderr())
