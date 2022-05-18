@@ -2,11 +2,10 @@
 #' title: |
 #'   | \vspace{2cm} \LARGE{SEQuoia Express Analysis Report}
 #' header-includes:
+#' - \usepackage[table]{xcolor}  
 #' - \usepackage{titling}
 #' - \usepackage{fontspec}
-#' - \setmainfont{FreeSans}
 #' - \usepackage{booktabs}
-#' - \usepackage[table]{xcolor}
 #' - \usepackage{fancyhdr}  
 #' - \pretitle{\vspace{5cm}\begin{center}\LARGE\includegraphics[width=12cm]{/opt/biorad/src/vendor-logo.png}\\[\bigskipamount]}
 #' - \pagestyle{fancy}                                                                                                

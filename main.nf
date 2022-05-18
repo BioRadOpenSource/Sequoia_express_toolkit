@@ -1,3 +1,4 @@
+nextflow.enable.dsl=1
 
 def paramsWithUsage = readParamsFromJsonSettings()
 
@@ -274,11 +275,12 @@ process picardAlignSummary {
     (bam, bai) = bams
     strand = params.reverseStrand ? "SECOND_READ_TRANSCRIPTION_STRAND" : "FIRST_READ_TRANSCRIPTION_STRAND"
     """
-    java -jar /opt/picard/picard.jar CollectRnaSeqMetrics I=$bam \
-    O=rna_metrics.txt \
-    REF_FLAT=$refFlatFile \
-    STRAND=$strand \
-    RIBOSOMAL_INTERVALS=$ribosomalIntervalFile
+    picard CollectRnaSeqMetrics -I $bam \
+    -O rna_metrics.txt \
+    -REF_FLAT $refFlatFile \
+    -STRAND $strand \
+    -RIBOSOMAL_INTERVALS $ribosomalIntervalFile \
+    -Xmx${task.memory.toBytes()}g
     cp rna_metrics.txt rna_metrics.txt.$name
     """
 }
