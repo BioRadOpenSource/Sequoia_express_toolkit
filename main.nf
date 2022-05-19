@@ -273,7 +273,7 @@ process picardAlignSummary {
     script:
     (bam, bai) = bams
     strand = params.reverseStrand ? "SECOND_READ_TRANSCRIPTION_STRAND" : "FIRST_READ_TRANSCRIPTION_STRAND"
-    #check format of memory to avoid breaking picard tools command line vs config
+    //check format of memory to avoid breaking picard tools command line vs config
     if(task.memory.toGiga() ==0){
 	picard_mem = task.memory.toBytes()
     }
