@@ -130,3 +130,6 @@ If you encounter an error / bug / issue, please contact support@bio-rad.com or s
 If you find that you are getting an error where nextflow cannot find your files, check your path, and if needed use an absolute path, or check the formatting on your relative path. Also check your reads have R1 / R2 (in caps) and end with .fastq or fastq.gz
 
 The pipeline runs with paired end as default (assumes you have both R1 and R2) if this is not the case you can run `--seqType=SE` to use just the R1 reads 
+
+### Change Log:
+- V1.1.0 Changed over pipeline to DSL2 to be compatible with new versions of nextflow - structure of the pipeline but no changes to any processing algorithms.
