@@ -1,8 +1,8 @@
 process rename_tuple{
 	input:
-	set sid, file(fastq) from read_files
+	tuple val(sid), path(fastq)
 	output:
-	set stdout, file(reads) into raw_reads_fastqc, raw_reads, raw_reads_validation
+	tuple stdout, path(reads), emit: reads_tuple
 	script:
 	reads = fastq
 	"""

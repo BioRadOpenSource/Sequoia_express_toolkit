@@ -5,13 +5,14 @@ process count_rna {
     publishDir "${params.outDir}/Sample_Files/$name/RNACounts", mode: 'copy'
 
     input:
-    set val(name), file(bam) from BamLong_ch
-    file longRNAgtfFile
+    tuple val(name), path(bam)
+    path(longRNAgtfFile)
+    val(geneId)
     
     output:
-    set val(name),file ("gene_counts_longRNA.$name") into counts_ch, counts_xls,count_threshold_ch
-    file "*.$name" into report_longRNACounts
-    file "*.featureCounts.bam"
+    tuple val(name),path ("gene_counts_longRNA.$name"), emit: counts_ch
+    path("*.$name"), emit: report_longRNACounts
+    path("*.featureCounts.bam")
 
     script:
     strand = params.reverseStrand ? "-s 2" : "-s 1"
@@ -36,10 +37,10 @@ process calcRPKMTPM {
     tag "calcRPKMTPM on $name"
     publishDir "${params.outDir}/Sample_Files/$name/calcRPKMTPM", mode: 'copy'
     input:
-    set val(name), file(counts) from counts_ch
+    tuple val(name), path(counts)
 
     output:
-    set val(name),file('gene_counts_rpkmtpm.txt') into rpkm_tpm_ch, normalize_xls, rpkm_threshold_ch
+    tuple val(name),path('gene_counts_rpkmtpm.txt'), emit: rpkm_tpm_ch
 
     script:
     """
@@ -55,12 +56,12 @@ process thresholdResults{
         // take in user specified cutoff and type and generate appropriate report
         // should also include biotype 
         input:
-        set val(name), file(rpkm) ,file(counts) from rpkm_threshold_ch.join(count_threshold_ch, by:0)
-        file annoDirPath
+        tuple val(name), path(rpkm) ,path(counts) 
+        path(annoDirPath)
         output:
-        file "Full_count_table.csv"
-        file "Filter_count_table.csv"
-        file "Filter_count_table.csv.$name" into threshold_ch
+        path("Full_count_table.csv")
+        path("Filter_count_table.csv")
+        path("Filter_count_table.csv.$name"), emit: threshold_ch
         script:
         """
         mkdir -p ./out/

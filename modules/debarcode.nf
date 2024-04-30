@@ -4,10 +4,10 @@ label 'low_memory'
 tag "debarcode DEAD on $sample_id"
 publishDir "${params.outDir}/Sample_Files/$sample_id/debarcode", mode: 'copy'
 input:
-set sample_id, file(reads) from raw_reads
+tuple val(sample_id), path(reads)
 output:
-set val(sample_id), file("*.fastq.gz") into debarcoded_ch
-file("*stats.tsv") into report_debarcode  
+tuple val(sample_id), path("*.fastq.gz"), emit: debarcoded_ch
+path("*stats.tsv"), emit: report_debarcode  
 script:
 """
 export RUST_LOG=info	

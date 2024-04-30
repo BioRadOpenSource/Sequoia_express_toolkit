@@ -5,10 +5,10 @@ process fastQc {
         saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
 
     input:
-    set sample_id, file(reads) from raw_reads_fastqc
+    tuple val(sample_id), path(reads)
 
     output:
-    file "*_fastqc.{zip,html}" into fastqc_results, report_fastqc
+    path("*_fastqc.{zip,html}"), emit: report_fastqc
 
     script:
     """

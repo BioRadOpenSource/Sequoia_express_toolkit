@@ -5,11 +5,11 @@ process cutAdapt {
     publishDir "${params.outDir}/Sample_Files/$name/cutAdapt", mode: 'copy'
 
     input:
-    set val(name), file(reads) from debarcoded_ch
+    tuple val(name), path(reads)
 
     output:
-    set val(name), file( "trimmed_*.fastq.gz") into trimmed_ch
-    file "trimlog.log.*" into report_trim
+    tuple val(name), path( "trimmed_*.fastq.gz"), emit: trimmed_ch
+    path("trimlog.log.*"), emit: report_trim
 
     script:
 	cutter = "-u 1"

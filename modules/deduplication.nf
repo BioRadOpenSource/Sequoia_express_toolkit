@@ -4,9 +4,9 @@ process umiTagging {
     tag "umiTagging on $name"
     //publishDir "${params.outDir}/$name/umiTagging", mode: 'copy'
     input:
-    set val(name) , file(bams) from umiTagging_ch
+    tuple val(name) , path(bams)
     output:
-    set val(name), file("Aligned.sortedByCoord.tagged.bam*") into dedup_in_ch
+    tuple val(name), path("Aligned.sortedByCoord.tagged.bam*"), emit: dedup_in_ch
     
     script:
     (bam, bai) = bams
@@ -29,10 +29,10 @@ tag "rumi dedup on $name"
 publishDir "${params.outDir}/Sample_Files/$name/dedup", mode: 'copy'
 	
 input:
-set val(name), file(bams) from dedup_in_ch
+tuple val(name), path(bams)
 output:	
-set val(name), file("rumi_dedup.sort.bam*") into  BamLong_ch
-file 'dedup.log.*' into report_dedup, meta_dedup
+tuple val(name), path("rumi_dedup.sort.bam*"), emit:  bamLong_ch
+path('dedup.log.*'), emit: report_dedup
 script:
 (bam, bai) = bams
 """

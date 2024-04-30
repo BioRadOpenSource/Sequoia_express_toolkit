@@ -6,15 +6,14 @@ process starAlign {
 
 
     input:
-    set val(name), file(input) from trimmed_ch
-    file genomeDirPath
-    file sjdbGTFFile
+    tuple val(name), path(input) 
+    path(genomeDirPath)
+    path(sjdbGTFFile)
 
     output:
-    set val(name), file("Aligned.sortedByCoord.out.bam*") into umiTagging_ch, picardBam_ch
-    file ("Unmapped.out.mate*")
-    val name into meta_names_star
-    file "Log.final.out.*" into meta_star, report_star
+    tuple val(name), path("Aligned.sortedByCoord.out.bam*"), emit: sorted_bam
+    path ("Unmapped.out.mate*")
+    path( "Log.final.out.*"), emit: report_star
 
     script:
            """
