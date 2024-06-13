@@ -1,4 +1,4 @@
-FROM condaforge/mambaforge:4.12.0-0
+FROM condaforge/mambaforge:24.3.0-0
 
 # Building image using bash shell
 SHELL ["/bin/bash", "-c"]
