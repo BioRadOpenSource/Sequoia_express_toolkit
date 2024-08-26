@@ -1,4 +1,4 @@
-
+nextflow.enable.dsl = 2
 def paramsWithUsage = readParamsFromJsonSettings()
 
 // Constants
