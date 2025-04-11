@@ -150,7 +150,7 @@ workflow{
     if(params.minGeneType != "none"){
             thresholdResults(
                 calcRPKMTPM.out.rpkm_tpm_ch.combine(
-                count_rna.out.counts_ch),
+                count_rna.out.counts_ch, by: 0),
                 annoDirPath)
     }
     else{
