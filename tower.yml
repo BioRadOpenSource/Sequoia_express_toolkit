@@ -1,0 +1,13 @@
+reports:
+  "report/batch_summary.csv":
+    display: "Batch Summary CSV"
+  "report/batch_summary.html":
+    display: "Batch Summary HTML"
+  "report/batch_summary.pdf":
+    display: "Batch Summary PDF"
+  "report/*csvReport.csv":
+    display: "CSV Report"
+  "report/*htmlReport.html":
+    display: "HTML Report"
+  "report/*pdfReport.pdf":
+    display: "PDF Report"
