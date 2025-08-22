@@ -106,6 +106,8 @@ workflow{
     	raw_reads = read_files
     }
     // Begin Processing
+    downsample(raw_reads)
+    raw_reads = downsample.out.fastq
 
     if (params.validateInputs) {
         validateInputs(raw_reads)
