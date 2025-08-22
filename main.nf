@@ -33,6 +33,7 @@ longRNAgtfFile        = file(params.genomes[params.genome][params.spikeType].lon
 sizesFile             = file(params.genomes[params.genome][params.spikeType].sizesFile)
 
 //import modules for processes
+include {downsample}                                from './modules/downsample'
 include {debarcode}                                 from './modules/debarcode'
 include {cutAdapt}                                  from './modules/cutadapt'
 include {umiTagging; deduplication}                 from './modules/deduplication'
