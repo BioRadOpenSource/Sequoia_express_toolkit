@@ -13,7 +13,7 @@ process downsample {
     tuple val(sampleId), path(reads, stageAs: 'raw/*')
 
     output:
-    tuple val(sampleId), path("*.fastq.gz") emit: fastq
+    tuple val(sampleId), path("*.fastq.gz"), emit: fastq
 
     script:
     """
