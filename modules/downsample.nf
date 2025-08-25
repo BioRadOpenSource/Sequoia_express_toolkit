@@ -18,6 +18,6 @@ process downsample {
     script:
     """
     # Run downsample script
-    downsample.py --I raw/${reads[0]} raw/${reads[1]} --O ./ --size 2M
+    downsample.py --I ${reads[0]} ${reads[1]} --O ./ --size 2M
     """
 }
