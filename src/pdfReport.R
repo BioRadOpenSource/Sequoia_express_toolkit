@@ -256,19 +256,41 @@ align_df$Value <- prettyNum(align_df$Value, big.mark = ",", scientific = F)
 kable(align_df, "latex", booktabs = T) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 
-rt_cov <- read.table(paste0(alignmentDir, "/rna_metrics.txt.",n), skip = 10, header=T, fill=T)
+# Picard only emits the normalized-coverage HISTOGRAM section when it can
+# compute per-transcript coverage; low-input/low-coverage samples omit it.
+# Read defensively so a missing histogram degrades gracefully instead of
+# crashing the report (read.table skip=10 -> "no lines available in input").
+metricsFile <- paste0(alignmentDir, "/rna_metrics.txt.", n)
+metricsLines <- readLines(metricsFile)
+histIdx <- grep("## HISTOGRAM", metricsLines, fixed = TRUE)
+rt_cov <- NULL
+if(length(histIdx) == 1 && histIdx < length(metricsLines)){
+  rt_cov <- tryCatch(
+    read.table(text = metricsLines[(histIdx + 1):length(metricsLines)], header = TRUE, fill = TRUE),
+    error = function(e) NULL)
+}
+hasCoverage <- !is.null(rt_cov) && nrow(rt_cov) > 0 && "All_Reads.normalized_coverage" %in% names(rt_cov)
 
-cov <- plot_ly(width = 700) %>% 
-  layout(
-    yaxis = list(title = "Normalized Coverage", range = c(0, max(rt_cov$All_Reads.normalized_coverage+0.1*rt_cov$All_Reads.normalized_coverage))),
-    xaxis = list(title = "Normalized Position (5' to 3')",
-                 tickvals = seq(0, 100, by=5),
-                 tickmode = "array",
-                 ticktext = seq(0, 100, by=5),
-                 tickangle = 90,
-                 ticks = "outside"))
+if(hasCoverage){
+  cov <- plot_ly(width = 700) %>%
+    layout(
+      yaxis = list(title = "Normalized Coverage", range = c(0, max(rt_cov$All_Reads.normalized_coverage+0.1*rt_cov$All_Reads.normalized_coverage))),
+      xaxis = list(title = "Normalized Position (5' to 3')",
+                   tickvals = seq(0, 100, by=5),
+                   tickmode = "array",
+                   ticktext = seq(0, 100, by=5),
+                   tickangle = 90,
+                   ticks = "outside"))
 
-cov <- add_trace(cov, x = ~c(1:101), y = rt_cov$All_Reads.normalized_coverage, type = 'scatter', mode ='lines')
+  cov <- add_trace(cov, x = ~c(1:101), y = rt_cov$All_Reads.normalized_coverage, type = 'scatter', mode ='lines')
+} else {
+  cov <- plot_ly(width = 700) %>%
+    layout(
+      annotations = list(text = "Transcript coverage histogram not available for this sample (insufficient coverage).",
+                         showarrow = FALSE, x = 0.5, y = 0.5, xref = "paper", yref = "paper"),
+      xaxis = list(visible = FALSE),
+      yaxis = list(visible = FALSE))
+}
 
 #' \newpage
 
