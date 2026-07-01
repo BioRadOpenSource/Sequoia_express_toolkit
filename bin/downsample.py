@@ -180,28 +180,33 @@ if __name__ == "__main__":
 
             if inputreadnum < int(number_of_reads):
                 print('Input number of reads ({}) less than downsampled number of reads ({}); will not downsample'.format(str(inputreadnum),number_of_reads))
+
+# pass reads through unchanged so downstream still receives an output file
+                r1_output_filename = output_dir + '/' + generatename(input_filename[0],readable_reads) + '.gz'
+                print('copying input reads to output unchanged...')
+                shutil.copyfile(input_filename[0], r1_output_filename)
             else:
-                
+
 # shuffle
                 print('shuffling reads...')
                 cmd = 'shuf {} > {}'.format(tmp_dir + '/compressed.tsv',tmp_dir + '/shuffled.tsv')
                 process = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-                process.wait()  
-                
+                process.wait()
+
 # downsample
                 print('downsampling reads...')
                 cmd = 'head -{} {} > {}'.format(number_of_reads,tmp_dir + '/shuffled.tsv',tmp_dir + '/downsampled.tsv')
                 process = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
                 process.wait()
-                
+
 # generate output filename
                 r1_output_filename = output_dir + '/' + generatename(input_filename[0],readable_reads) + '.gz'
-    
+
 # split compressed file and write output
                 print('writing output files...')
                 cmd = 'cat {} | cut -f 1-4 | tr "\t" "\n" | pigz > {}'.format(tmp_dir + '/downsampled.tsv',r1_output_filename)
                 process = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-                process.wait()  
+                process.wait()
 
 # process read pairs
         elif len(input_filename) == 2:
@@ -219,29 +224,36 @@ if __name__ == "__main__":
 
             if inputreadnum < int(number_of_reads):
                 print('Input number of reads ({}) less than downsampled number of reads ({}); will not downsample'.format(str(inputreadnum),number_of_reads))
+
+# pass reads through unchanged so downstream still receives output files
+                r1_output_filename = output_dir + '/' + generatename(input_filename[0],readable_reads) + '.gz'
+                r2_output_filename = output_dir + '/' + generatename(input_filename[1],readable_reads) + '.gz'
+                print('copying input reads to output unchanged...')
+                shutil.copyfile(input_filename[0], r1_output_filename)
+                shutil.copyfile(input_filename[1], r2_output_filename)
             else:
-                
+
 # shuffle
                 print('shuffling reads...')
                 cmd = 'shuf {} > {}'.format(tmp_dir + '/compressed.tsv',tmp_dir + '/shuffled.tsv')
                 process = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-                process.wait()                                                                                            
- 
+                process.wait()
+
 # downsample
                 print('downsampling reads...')
                 cmd = 'head -{} {} > {}'.format(number_of_reads,tmp_dir + '/shuffled.tsv',tmp_dir + '/downsampled.tsv')
                 process = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-                process.wait() 
-                       
+                process.wait()
+
 # generate output filenames
                 r1_output_filename = output_dir + '/' + generatename(input_filename[0],readable_reads) + '.gz'
-                r2_output_filename = output_dir + '/' + generatename(input_filename[1],readable_reads) + '.gz'     
-    
+                r2_output_filename = output_dir + '/' + generatename(input_filename[1],readable_reads) + '.gz'
+
 # split compressed file and write output
                 print('writing output files...')
                 cmd = 'cat {} | tee >(cut -f 1-4 | tr "\t" "\n" | pigz > {}) | cut -f 5-8 | tr "\t" "\n" | pigz > {}'.format(tmp_dir + '/downsampled.tsv',r1_output_filename,r2_output_filename)
                 process = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-                process.wait()  
+                process.wait()
                                           
 # delete temporary directory
         shutil.rmtree(tmp_dir)
